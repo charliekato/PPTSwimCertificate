@@ -357,20 +357,31 @@ Sub show(slideIndex As Integer, txtBoxName As String, dispText As String)
     End If
 End Sub
 
-Sub check_shape()
+
+Sub InitTextBox()
+    Call DisplayTextBoxName("選手名")
+    Call DisplayTextBoxName("所属")
+    Call DisplayTextBoxName("クラス")
+    Call DisplayTextBoxName("種目")
+    Call DisplayTextBoxName("順位")
+    Call DisplayTextBoxName("タイム")
+End Sub
+Sub DisplayTextBoxName(txtBoxName As String)
     Dim slide As slide
+    Dim shp As Shape
     Dim i As Integer
     Dim slideIndex As Integer
-    ' スライドの取得 (テキストボックスが存在するスライド番号に設定)
-    slideIndex = 1
-    Set slide = ActivePresentation.Slides(slideIndex)
-
-    ' すべてのシェイプをループ
-    For i = 1 To slide.Shapes.Count
-
-           ' slide.Shapes(i).Select
-           ' MsgBox (" " & i & slide.Shapes(i).Name & ">" & slide.Shapes(i).TextFrame.TextRange)
-           On Error Resume Next
-        slide.Shapes(i).TextFrame.TextRange = ">>" & i & "<<"
-    Next i
+    Dim shapeExists As Boolean
+    
+    Set slide = ActivePresentation.Slides(1)
+    On Error Resume Next
+     Set shp = slide.Shapes(txtBoxName)
+     shapeExists = Not shp Is Nothing
+    On Error GoTo 0
+            
+    If shapeExists Then
+                ' TextBoxの名前をTextRangeに設定
+        shp.TextFrame.TextRange = txtBoxName
+    End If
 End Sub
+
