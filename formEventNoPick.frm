@@ -14,6 +14,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
+
 Private Sub btnClose_Click()
     Unload Me
 End Sub
@@ -25,7 +26,13 @@ Private Sub listEvent_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shif
     End If
 End Sub
 
+Sub add_list_item(row As Long, item1 As String, item2 As String, item3 As String)
+    formPrgNoPick.listPrg.AddItem ("")
+    formPrgNoPick.listPrg.List(row, 0) = item1
+    formPrgNoPick.listPrg.List(row, 1) = item2
+    formPrgNoPick.listPrg.List(row, 2) = item3
 
+End Sub
 
 Private Sub btnOK_Click()
     Dim Gender(4) As String
@@ -35,10 +42,12 @@ Private Sub btnOK_Click()
     Dim selectedItem As String
     Dim myRecordSet As New ADODB.Recordset
     Dim myquery As String
-
-    selectedItem = listEvent.value
+    Dim row As Long
+    selectedItem = listEvent.Value
     HyouShow.EventNo = CInt(Left(selectedItem, 3))
     If HyouShow.class_exist(HyouShow.EventNo) Then
+        Call add_list_item(0, "#", "クラス", "種目")
+        row = 1
         myquery = "SELECT プログラム.表示用競技番号 as 競技番号, クラス.クラス名称 as クラス, " & _
               "プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, 種目.種目 as 種目 FROM プログラム" + _
@@ -52,14 +61,19 @@ Private Sub btnOK_Click()
             myRecordSet.Open myquery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
             Do Until myRecordSet.EOF
                 
-                formPrgNoPick.listPrg.AddItem Right("   " & myRecordSet!競技番号, 3) & "  " & _
-                          Gender(if_not_null(myRecordSet!性別)) & " " & _
-                          Right("               " + if_not_null_string(myRecordSet!クラス), 10) & " " & _
-                          if_not_null_string(myRecordSet!距離) & " " & _
-                          if_not_null_string(myRecordSet!種目)
+                'formPrgNoPick.listPrg.AddItem Right("   " & myRecordSet!競技番号, 3) & "  " & _
+                '          Gender(if_not_null(myRecordSet!性別)) & " " & _
+                '          Right("               " + if_not_null_string(myRecordSet!クラス), 10) & " " & _
+                '          if_not_null_string(myRecordSet!距離) & " " & _
+                '          if_not_null_string(myRecordSet!種目)
+                Call add_list_item(row, Right("   " & myRecordSet!競技番号, 3), myRecordSet!クラス, _
+                    Gender(myRecordSet!性別) + myRecordSet!距離 + myRecordSet!種目)
+                row = row + 1
                 myRecordSet.MoveNext
             Loop
     Else
+        Call add_list_item(0, "#", "", "種目")
+        row = 1
         myquery = "SELECT プログラム.競技番号 as 競技番号,  " & _
               "プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, 種目.種目 as 種目 FROM プログラム" + _
@@ -68,10 +82,13 @@ Private Sub btnOK_Click()
               " WHERE プログラム.大会番号 = " & HyouShow.EventNo & ";"
             myRecordSet.Open myquery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
             Do Until myRecordSet.EOF
-                formPrgNoPick.listPrg.AddItem Right("   " & myRecordSet!競技番号, 3) & "  " & _
-                          Gender(if_not_null(myRecordSet!性別)) & " " & _
-                          if_not_null_string(myRecordSet!距離) & " " & _
-                          if_not_null_string(myRecordSet!種目)
+                Call add_list_item(row, Right("   " & myRecordSet!競技番号, 3), "", _
+                    Gender(myRecordSet!性別) + myRecordSet!距離 + myRecordSet!種目)
+                'formPrgNoPick.listPrg.AddItem Right("   " & myRecordSet!競技番号, 3) & "  " & _
+                '          Gender(if_not_null(myRecordSet!性別)) & " " & _
+                '          if_not_null_string(myRecordSet!距離) & " " & _
+                '          if_not_null_string(myRecordSet!種目)
+                row = row + 1
                 myRecordSet.MoveNext
             Loop
     End If
