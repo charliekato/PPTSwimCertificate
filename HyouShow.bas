@@ -222,10 +222,10 @@ Sub fill_out_form_relay(PrgNo As Integer, className As String, _
         junnib = junnib + 1
         If prevTime <> myRecordSet!ƒS[ƒ‹ Then
             junni = junnib
-            If junni > formPrgNoPick.tbxJunniLast Or junni Then
+            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
                 Exit Do
             End If
-            If junni < formPrgNoPick.tbxJunniTop Then
+            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
                 GoTo DOLOOPEND
             End If
             prevTime = myRecordSet!ƒS[ƒ‹
@@ -284,10 +284,10 @@ Sub fill_out_form_kojin(PrgNo As Integer, className As String, _
         If prevTime <> myRecordSet!ƒS[ƒ‹ Then
 
             junni = junnib
-            If junni > formPrgNoPick.tbxJunniLast Then
+            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
                 Exit Do
             End If
-            If junni < formPrgNoPick.tbxJunniTop Then
+            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
                 GoTo LOOPEND2
             End If
             prevTime = myRecordSet!ƒS[ƒ‹
