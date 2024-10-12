@@ -2,7 +2,6 @@ Attribute VB_Name = "HyouShow"
 Option Explicit
 Option Base 0
 
-    Const JLIMIT = 1  '  何位まで賞状を出すか
     Public MyCon As ADODB.Connection
     Public EventNo As Integer
 
@@ -57,7 +56,7 @@ End Function
 
 
 
-Public Function class_exist(ByVal EventNo As Integer) As Boolean
+Public Function class_exist(dummy As String) As Boolean
     Dim myRecordSet As New ADODB.Recordset
     Dim myquery As String
     Dim rc As Boolean
@@ -74,7 +73,7 @@ Public Function class_exist(ByVal EventNo As Integer) As Boolean
 
 End Function
 
-Sub init_senshu(ByVal EventNo As Integer)
+Sub init_senshu(dummy As String)
 
     Dim myRecordSet As New ADODB.Recordset
     Dim myquery As String
@@ -105,12 +104,12 @@ Public Function get_prgNo(printPrgNo As Integer) As Integer
     myRecordSet.Close
     Set myRecordSet = Nothing
 End Function
-Sub get_race_title(ByVal EventNo As Integer, ByVal PrgNo As Integer, ByRef Class As String, _
+Sub get_race_title(ByVal PrgNo As Integer, ByRef Class As String, _
             ByRef genderStr As String, ByRef distance As String, ByRef styleNo As Integer)
     Dim myRecordSet As New ADODB.Recordset
     Dim myquery As String
     Dim classExist As Boolean
-    classExist = class_exist(EventNo)
+    classExist = class_exist("")
     If classExist Then
         myquery = "SELECT クラス.クラス名称 as クラス, プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, プログラム.種目コード as 種目 FROM プログラム " + _
@@ -192,29 +191,24 @@ Function ConvertTimeFormat(timeString As String)
         ConvertTimeFormat = seconds & "秒" & milliseconds
     End If
 End Function
+''eventNo, prgNo, className, genderName, distance, printenable
 
-Sub fill_out_form(PrgNo As Integer, printEnable As Boolean)
-    Dim rlist As Collection
-
+Sub fill_out_form_relay(PrgNo As Integer, className As String, _
+                genderName As String, distance As String, styleNo As Integer, printenable As Boolean)
+    Dim myquery As String
     Dim junni As Integer
+    Dim junnib As Integer
     Dim prevTime As String
-'    Dim slideIndex As Integer
-    Dim className As String
-    Dim genderName As String
-    Dim distance As String
-    Dim styleNo As Integer
-    Dim style As String
+
+
 
     Dim myRecordSet As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
-    Dim myquery As String
-    Call get_race_title(EventNo, PrgNo, className, genderName, distance, styleNo)
     junni = 0
+    junnib = 0
     prevTime = ""
-
-    If is_relay(styleNo) Then
-        myquery = "SELECT リレーチーム.チーム名 as チーム名, 記録.ゴール as ゴール, " & _
+    myquery = "SELECT リレーチーム.チーム名 as チーム名, 記録.ゴール as ゴール, " & _
             "記録.第１泳者, 記録.第２泳者, 記録.第３泳者, 記録.第４泳者, 記録.新記録印刷マーク " & _
             "FROM 記録 " & _
             " inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 " & _
@@ -223,108 +217,188 @@ Sub fill_out_form(PrgNo As Integer, printEnable As Boolean)
             " and リレーチーム.大会番号 = " & EventNo & _
             " order by ゴール asc;"
 
-        myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
-        Do Until myRecordSet.EOF
-            If prevTime <> myRecordSet!ゴール Then
-                junni = junni + 1
-                If junni > JLIMIT Then
-                    Exit Do
-                End If
-                prevTime = myRecordSet!ゴール
+    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
+    Do Until myRecordSet.EOF
+        junnib = junnib + 1
+        If prevTime <> myRecordSet!ゴール Then
+            junni = junnib
+            If junni > formPrgNoPick.tbxJunniLast Or junni Then
+                Exit Do
             End If
-            If formPrgNoPick.cbxName.Value Then
-                Call show(junni, "選手名", myRecordSet!チーム名)
-            Else
-                Call show(junni, "選手名", "")
+            If junni < formPrgNoPick.tbxJunniTop Then
+                GoTo DOLOOPEND
             End If
-            If formPrgNoPick.cbxBelongsTo.Value Then
-                Call show(junni, "所属", Swimmer(myRecordSet!第1泳者) & "・" & Swimmer(myRecordSet!第2泳者) & "・" & _
+            prevTime = myRecordSet!ゴール
+        End If
+        Call fill_name(myRecordSet!チーム名)
+
+        Call fill_shozoku(Swimmer(myRecordSet!第1泳者) & "・" & Swimmer(myRecordSet!第2泳者) & "・" & _
                      Swimmer(myRecordSet!第3泳者) & "・" & Swimmer(myRecordSet!第4泳者))
-            Else
-                Call show(junni, "所属", "")
-            End If
-            If formPrgNoPick.cbxJunni.Value Then
-                Call show(junni, "順位", className)
-            Else
-                Call show(junni, "順位", "")
-            End If
-            If formPrgNoPick.cbxStyle.Value Then
-                Call show(junni, "種目", genderName + distance + Shumoku(styleNo))
-                Else
-                Call show(junni, "種目", "")
-            End If
-            If formPrgNoPick.cbxTime.Value Then
-                Call show(junni, "タイム", ConvertTimeFormat(myRecordSet!ゴール) + "  " + _
-                      if_not_null_string(myRecordSet!新記録印刷マーク))
-                Else
-                Call show(junni, "タイム", "")
-            End If
-            If printEnable Then
-                Call print_it("")
-            End If
-            myRecordSet.MoveNext
-        Loop
-    Else
-        myquery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1, 記録.新記録印刷マーク " & _
+        
+        Call fill_junni(junni)
+        Call fill_shumoku(genderName + distance + Shumoku(styleNo))
+        Call fill_time(myRecordSet!ゴール)
+        If printenable Then
+            Call print_it("")
+        End If
+DOLOOPEND:
+        
+        myRecordSet.MoveNext
+    Loop
+                    ' クローズと解放
+    myRecordSet.Close
+    'MyCon.Close
+    Set myRecordSet = Nothing
+    'Set MyCon = Nothing
+End Sub
+
+Sub fill_out_form_kojin(PrgNo As Integer, className As String, _
+                    genderName As String, distance As String, styleNo As Integer, printenable As Boolean)
+    Dim myquery As String
+    Dim junni As Integer
+    Dim junnib As Integer
+    Dim prevTime As String
+
+
+    Dim myRecordSet As New ADODB.Recordset
+    Dim winnerName As String
+    Dim myTime As String
+    junni = 0
+    junnib = 0
+    prevTime = ""
+    
+    myquery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1, 記録.新記録印刷マーク " & _
         "FROM 記録 " & _
         " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
         " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & PrgNo & _
         " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
         " and 記録.選手番号>0 order by ゴール asc;"
 
-        myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
-        Do Until myRecordSet.EOF
-            If prevTime <> myRecordSet!ゴール Then
-                junni = junni + 1
-                If junni > JLIMIT Then
-                    Exit Do
-                End If
-            End If
-            If formPrgNoPick.cbxName.Value Then
-                Call show(junni, "選手名", myRecordSet!氏名)
-            Else
-                Call show(junni, "選手名", "")
-            End If
-            If formPrgNoPick.cbxBelongsTo.Value Then
-                Call show(junni, "所属", myRecordSet!所属名称1)
-            Else
-                Call show(junni, "所属", "")
-            End If
-            If formPrgNoPick.cbxClass.Value Then
-                Call show(junni, "クラス", className)
-            Else
-                Call show(junni, "クラス", "")
-            End If
-            If formPrgNoPick.cbxStyle.Value Then
-                Call show(junni, "種目", genderName + distance + Shumoku(styleNo))
-            Else
-                Call show(junni, "種目", "")
-            End If
-            If formPrgNoPick.cbxTime.Value Then
-                Call show(junni, "タイム", ConvertTimeFormat(myRecordSet!ゴール) + "  " + _
-                    if_not_null_string(myRecordSet!新記録印刷マーク))
-            Else
-                Call show(junni, "タイム", "")
-            End If
-            If formPrgNoPick.cbxJunni.Value Then
-                Call show(junni, "順位", junni & "位")
-            Else
-                Call show(junni, "順位", "")
-            End If
-            If printEnable Then
-                Call print_it("")
+    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
+    Do Until myRecordSet.EOF
+        junnib = junnib + 1
+        If IsNull(myRecordSet!ゴール) Or myRecordSet!ゴール = "" Then
+            MsgBox ("該当データがありません。たぶんレースが終わっていないと思われます。")
+            Exit Do
+        End If
+        If prevTime <> myRecordSet!ゴール Then
 
+            junni = junnib
+            If junni > formPrgNoPick.tbxJunniLast Then
+                Exit Do
+            End If
+            If junni < formPrgNoPick.tbxJunniTop Then
+                GoTo LOOPEND2
             End If
             prevTime = myRecordSet!ゴール
-            myRecordSet.MoveNext
-        Loop
-    End If
-    ' クローズと解放
+        End If
+        Call fill_name(myRecordSet!氏名)
+        Call fill_shozoku(myRecordSet!所属名称1)
+        Call fill_class(className)
+        Call fill_shumoku(genderName + distance + Shumoku(styleNo))
+        Call fill_time(ConvertTimeFormat(myRecordSet!ゴール) + " " + _
+                 if_not_null_string(myRecordSet!新記録印刷マーク))
+       
+        Call fill_junni(junni)
+
+        If printenable Then
+            Call print_it("")
+
+        End If
+LOOPEND2:
+       
+        myRecordSet.MoveNext
+    Loop
+            ' クローズと解放
     myRecordSet.Close
     'MyCon.Close
     Set myRecordSet = Nothing
     'Set MyCon = Nothing
+End Sub
 
+Sub fill_time(myTime As String)
+    If formPrgNoPick.cbxTime.Value Then
+        Call show("タイム", myTime)
+    Else
+        Call show("タイム", "")
+    End If
+End Sub
+
+Sub fill_class(className As String)
+    If formPrgNoPick.cbxClass.Value Then
+        Call show("クラス", className)
+    Else
+        Call show("クラス", "")
+    End If
+End Sub
+Sub fill_shumoku(Shumoku As String)
+    If formPrgNoPick.cbxStyle.Value Then
+        Call show("種目", Shumoku)
+    Else
+        Call show("種目", "")
+    End If
+End Sub
+
+Sub fill_junni(junni As Integer)
+    If formPrgNoPick.cbxJunni.Value Then
+        If formPrgNoPick.cbxJunniShowMethod1.Value Then
+            Call show("順位", "" & junni)
+        ElseIf formPrgNoPick.cbxJunniShowMethod2.Value Then
+            Call show("順位", "第" & junni & "位")
+        ElseIf formPrgNoPick.cbxJunniShowMethod2.Value Then
+            If junni = 1 Then
+                Call show("順位", "優勝")
+            Else
+                Call show("順位", "第" & junni & "位")
+            End If
+        End If
+    Else
+        Call show("順位", "")
+    End If
+End Sub
+
+Sub fill_name(myName As String)
+    If formPrgNoPick.cbxName.Value Then
+        Call show("選手名", myName)
+    Else
+        Call show("選手名", "")
+    End If
+End Sub
+
+Sub fill_shozoku(shozoku As String)
+    If formPrgNoPick.cbxBelongsTo.Value Then
+        Call show("所属", shozoku)
+    Else
+        Call show("所属", "")
+    End If
+End Sub
+
+Sub fill_out_form(PrgNo As Integer, printenable As Boolean)
+
+    Dim myquery As String
+
+
+    Dim className As String
+    Dim genderName As String
+    Dim distance As String
+    Dim styleNo As Integer
+    
+    Call get_race_title(PrgNo, className, genderName, distance, styleNo)
+
+
+    If is_relay(styleNo) Then
+        Call fill_out_form_relay(PrgNo, className, genderName, distance, styleNo, printenable)
+    Else
+        Call fill_out_form_kojin(PrgNo, className, genderName, distance, styleNo, printenable)
+    End If
+
+
+End Sub
+Sub BackOff()
+    ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
+End Sub
+Sub BackOn()
+    ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
 End Sub
 Sub print_it(dummy As String)
     ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
@@ -340,7 +414,7 @@ Sub name_text_box(boxNo As Integer, myName As String)
     Set slide = ActivePresentation.Slides(1)
     slide.Shapes(boxNo).Name = myName
 End Sub
-Sub show(slideIndex As Integer, txtBoxName As String, dispText As String)
+Sub show(txtBoxName As String, dispText As String)
 
     ' スライドの取得
     Dim slide As slide

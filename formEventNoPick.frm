@@ -15,6 +15,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 
+
 Private Sub btnClose_Click()
     Unload Me
 End Sub
@@ -45,7 +46,7 @@ Private Sub btnOK_Click()
     Dim row As Long
     selectedItem = listEvent.Value
     HyouShow.EventNo = CInt(Left(selectedItem, 3))
-    If HyouShow.class_exist(HyouShow.EventNo) Then
+    If HyouShow.class_exist("") Then
         Call add_list_item(0, "#", "クラス", "種目")
         row = 1
         myquery = "SELECT プログラム.表示用競技番号 as 競技番号, クラス.クラス名称 as クラス, " & _
@@ -96,7 +97,7 @@ Private Sub btnOK_Click()
 
     myRecordSet.Close
     Set myRecordSet = Nothing
-    Call HyouShow.init_senshu(HyouShow.EventNo)
+    Call HyouShow.init_senshu("")
     
     Unload Me
     formPrgNoPick.show vbModeless

@@ -15,6 +15,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 
+
 Private Sub btnClose_Click()
     Unload Me
 End Sub
@@ -37,6 +38,25 @@ Private Sub btnPrint_Click()
 
     
     Call fill_out_form(HyouShow.get_prgNo(printPrgNo), True)
+End Sub
+
+Private Sub cbxJunniShowMethod1_Click()
+    If cbxJunniShowMethod1.Value = True Then
+        cbxJunniShowMethod2.Value = False
+        cbxJunniShowMethod3.Value = False
+    End If
+End Sub
+Private Sub cbxJunniShowMethod2_Click()
+    If cbxJunniShowMethod2.Value = True Then
+        cbxJunniShowMethod1.Value = False
+        cbxJunniShowMethod3.Value = False
+    End If
+End Sub
+Private Sub cbxJunniShowMethod3_Click()
+    If cbxJunniShowMethod3.Value = True Then
+        cbxJunniShowMethod2.Value = False
+        cbxJunniShowMethod1.Value = False
+    End If
 End Sub
 
 Private Sub listPrg_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
