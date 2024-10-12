@@ -317,7 +317,7 @@ LOOPEND2:
 End Sub
 
 Sub fill_time(myTime As String)
-    If formPrgNoPick.cbxTime.Value Then
+    If formPrgNoPick.cbxTime.value Then
         Call show("タイム", myTime)
     Else
         Call show("タイム", "")
@@ -325,14 +325,14 @@ Sub fill_time(myTime As String)
 End Sub
 
 Sub fill_class(className As String)
-    If formPrgNoPick.cbxClass.Value Then
+    If formPrgNoPick.cbxClass.value Then
         Call show("クラス", className)
     Else
         Call show("クラス", "")
     End If
 End Sub
 Sub fill_shumoku(Shumoku As String)
-    If formPrgNoPick.cbxStyle.Value Then
+    If formPrgNoPick.cbxStyle.value Then
         Call show("種目", Shumoku)
     Else
         Call show("種目", "")
@@ -340,12 +340,12 @@ Sub fill_shumoku(Shumoku As String)
 End Sub
 
 Sub fill_junni(junni As Integer)
-    If formPrgNoPick.cbxJunni.Value Then
-        If formPrgNoPick.cbxJunniShowMethod1.Value Then
+    If formPrgNoPick.cbxJunni.value Then
+        If formPrgNoPick.cbxJunniShowMethod1.value Then
             Call show("順位", "" & junni)
-        ElseIf formPrgNoPick.cbxJunniShowMethod2.Value Then
+        ElseIf formPrgNoPick.cbxJunniShowMethod2.value Then
             Call show("順位", "第" & junni & "位")
-        ElseIf formPrgNoPick.cbxJunniShowMethod2.Value Then
+        ElseIf formPrgNoPick.cbxJunniShowMethod3.value Then
             If junni = 1 Then
                 Call show("順位", "優勝")
             Else
@@ -358,7 +358,7 @@ Sub fill_junni(junni As Integer)
 End Sub
 
 Sub fill_name(myName As String)
-    If formPrgNoPick.cbxName.Value Then
+    If formPrgNoPick.cbxName.value Then
         Call show("選手名", myName)
     Else
         Call show("選手名", "")
@@ -366,7 +366,7 @@ Sub fill_name(myName As String)
 End Sub
 
 Sub fill_shozoku(shozoku As String)
-    If formPrgNoPick.cbxBelongsTo.Value Then
+    If formPrgNoPick.cbxBelongsTo.value Then
         Call show("所属", shozoku)
     Else
         Call show("所属", "")
