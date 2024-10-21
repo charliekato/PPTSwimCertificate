@@ -236,6 +236,7 @@ Sub fill_out_form_relay(PrgNo As Integer, className As String, _
                      Swimmer(myRecordSet!第3泳者) & "・" & Swimmer(myRecordSet!第4泳者))
         
         Call fill_junni(junni)
+         Call fill_class(className)
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
         Call fill_time(myRecordSet!ゴール)
         If printenable Then
@@ -317,7 +318,7 @@ LOOPEND2:
 End Sub
 
 Sub fill_time(myTime As String)
-    If formPrgNoPick.cbxTime.value Then
+    If formPrgNoPick.cbxTime.Value Then
         Call show("タイム", myTime)
     Else
         Call show("タイム", "")
@@ -325,14 +326,14 @@ Sub fill_time(myTime As String)
 End Sub
 
 Sub fill_class(className As String)
-    If formPrgNoPick.cbxClass.value Then
+    If formPrgNoPick.cbxClass.Value Then
         Call show("クラス", className)
     Else
         Call show("クラス", "")
     End If
 End Sub
 Sub fill_shumoku(Shumoku As String)
-    If formPrgNoPick.cbxStyle.value Then
+    If formPrgNoPick.cbxStyle.Value Then
         Call show("種目", Shumoku)
     Else
         Call show("種目", "")
@@ -340,12 +341,12 @@ Sub fill_shumoku(Shumoku As String)
 End Sub
 
 Sub fill_junni(junni As Integer)
-    If formPrgNoPick.cbxJunni.value Then
-        If formPrgNoPick.cbxJunniShowMethod1.value Then
+    If formPrgNoPick.cbxJunni.Value Then
+        If formPrgNoPick.cbxJunniShowMethod1.Value Then
             Call show("順位", "" & junni)
-        ElseIf formPrgNoPick.cbxJunniShowMethod2.value Then
+        ElseIf formPrgNoPick.cbxJunniShowMethod2.Value Then
             Call show("順位", "第" & junni & "位")
-        ElseIf formPrgNoPick.cbxJunniShowMethod3.value Then
+        ElseIf formPrgNoPick.cbxJunniShowMethod3.Value Then
             If junni = 1 Then
                 Call show("順位", "優勝")
             Else
@@ -358,7 +359,7 @@ Sub fill_junni(junni As Integer)
 End Sub
 
 Sub fill_name(myName As String)
-    If formPrgNoPick.cbxName.value Then
+    If formPrgNoPick.cbxName.Value Then
         Call show("選手名", myName)
     Else
         Call show("選手名", "")
@@ -366,7 +367,7 @@ Sub fill_name(myName As String)
 End Sub
 
 Sub fill_shozoku(shozoku As String)
-    If formPrgNoPick.cbxBelongsTo.value Then
+    If formPrgNoPick.cbxBelongsTo.Value Then
         Call show("所属", shozoku)
     Else
         Call show("所属", "")
