@@ -238,7 +238,8 @@ Sub fill_out_form_relay(PrgNo As Integer, className As String, _
         Call fill_junni(junni)
          Call fill_class(className)
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
-        Call fill_time(myRecordSet!ゴール)
+        Call fill_time(myRecordSet!ゴール + " " + _
+            if_not_null_string(myRecordSet!新記録印刷マーク))
         If printenable Then
             Call print_it("")
         End If
@@ -299,12 +300,9 @@ Sub fill_out_form_kojin(PrgNo As Integer, className As String, _
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
         Call fill_time(ConvertTimeFormat(myRecordSet!ゴール) + " " + _
                  if_not_null_string(myRecordSet!新記録印刷マーク))
-       
         Call fill_junni(junni)
-
         If printenable Then
             Call print_it("")
-
         End If
 LOOPEND2:
        
