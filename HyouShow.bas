@@ -215,6 +215,7 @@ Sub fill_out_form_relay(PrgNo As Integer, className As String, _
             " where   記録.競技番号 = " & PrgNo & _
             " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
             " and リレーチーム.大会番号 = " & EventNo & _
+            " and 記録.オープン = 0 " & _
             " order by ゴール asc;"
 
     myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
@@ -274,6 +275,7 @@ Sub fill_out_form_kojin(PrgNo As Integer, className As String, _
         " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
         " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & PrgNo & _
         " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
+        " and 記録.オープン = 0 " & _
         " and 記録.選手番号>0 order by ゴール asc;"
 
     myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
