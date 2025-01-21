@@ -73,6 +73,86 @@ Public Function class_exist(dummy As String) As Boolean
 
 End Function
 
+Sub set_open_to_kengai()
+    Dim sql1 As String
+    Dim sql2 As String
+    Dim cmd As Object
+    
+    sql1 = "UPDATE 記録 " & _
+              " Set 記録.オープン = 1 " & _
+              " From 記録 " & _
+              " INNER JOIN プログラム on プログラム.競技番号 = 記録.競技番号 " & _
+              " INNER JOIN 選手 ON 記録.選手番号 = 選手.選手番号 " & _
+              " WHERE 記録.大会番号 = " & EventNo & " And 選手.大会番号 = " & EventNo & _
+              " And プログラム.大会番号 = " & EventNo & _
+              " and プログラム.種目コード < 6 " & _
+              " and 選手.加盟団体番号 <> 25; "
+              
+    sql2 = "UPDATE 記録 " & _
+           "SET 記録.オープン = 1 " & _
+           "FROM 記録 " & _
+           "INNER JOIN プログラム ON プログラム.競技番号 = 記録.競技番号 " & _
+           "INNER JOIN リレーチーム ON 記録.選手番号 = リレーチーム.チーム番号 " & _
+           "WHERE 記録.大会番号 = " & EventNo & " AND リレーチーム.大会番号 = " & _
+            EventNo & " AND プログラム.大会番号 = " & EventNo & _
+           "AND プログラム.種目コード > 5 " & _
+           "AND リレーチーム.加盟団体番号 <> 25;"
+           
+    Set cmd = CreateObject("ADODB.Command")
+'    On Error GoTo ErrorHandler
+   
+    cmd.ActiveConnection = MyCon
+    cmd.CommandText = sql1
+    cmd.CommandType = adCmdText
+    cmd.Execute
+
+    
+    
+
+    cmd.ActiveConnection = MyCon
+    cmd.CommandText = sql2
+    cmd.CommandType = adCmdText
+    cmd.Execute
+Cleanup:
+    If Not cmd Is Nothing Then Set cmd = Nothing
+    Exit Sub
+ErrorHandler:
+    MsgBox "error while setting open"
+    Resume Cleanup
+End Sub
+
+
+Sub reset_open()
+    Dim sql As String
+    
+    Dim cmd As Object
+    
+    sql = "UPDATE 記録" & _
+   " Set 記録.オープン = 0" & _
+   " From 記録" & _
+   " INNER JOIN 選手 ON 記録.選手番号 = 選手.選手番号 " & _
+   " WHERE 記録.大会番号 = " & EventNo & " AND 選手.大会番号=" & EventNo
+              
+
+           
+    Set cmd = CreateObject("ADODB.Command")
+    On Error GoTo ErrorHandler2
+    With cmd
+        .ActiveConnection = MyCon
+        .CommandText = sql
+        .CommandType = adCmdText
+    End With
+    cmd.Execute
+    
+
+Cleanup:
+    If Not cmd Is Nothing Then Set cmd = Nothing
+    Exit Sub
+ErrorHandler2:
+    MsgBox "error while setting open"
+    Resume Cleanup
+End Sub
+
 Sub init_senshu(dummy As String)
 
     Dim myRecordSet As New ADODB.Recordset
@@ -239,7 +319,7 @@ Sub fill_out_form_relay(PrgNo As Integer, className As String, _
         Call fill_junni(junni)
          Call fill_class(className)
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
-        Call fill_time(myRecordSet!ゴール + " " + _
+        Call fill_time(ConvertTimeFormat(myRecordSet!ゴール) + " " + _
             if_not_null_string(myRecordSet!新記録印刷マーク))
         If printenable Then
             Call print_it("")
@@ -386,14 +466,17 @@ Sub fill_out_form(PrgNo As Integer, printenable As Boolean)
     
     Call get_race_title(PrgNo, className, genderName, distance, styleNo)
 
-
+    '''------ 春季室内only 県外をopenにする---
+    ' Call set_open_to_kengai
+    '------------------------------------------
     If is_relay(styleNo) Then
         Call fill_out_form_relay(PrgNo, className, genderName, distance, styleNo, printenable)
     Else
         Call fill_out_form_kojin(PrgNo, className, genderName, distance, styleNo, printenable)
     End If
-
-
+    '-------- 春季室内only
+    'Call reset_open
+    '---------------------------------------------
 End Sub
 Sub BackOff()
     ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
