@@ -10,6 +10,7 @@ Option Base 0
     Public Swimmer() As String
 
 
+
 Sub init_gender(dummy As String)
     Gender(1) = "男子"
     Gender(2) = "女子"
@@ -57,18 +58,18 @@ End Function
 
 
 Public Function class_exist(dummy As String) As Boolean
-    Dim myRecordSet As New ADODB.Recordset
+    Dim myRecordset As New ADODB.Recordset
     Dim myquery As String
     Dim rc As Boolean
     myquery = "select * from クラス where 大会番号 = " & EventNo
-    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
-    If myRecordSet.EOF Then
+    myRecordset.Open myquery, MyCon, adOpenStatic, adLockReadOnly
+    If myRecordset.EOF Then
         rc = False
     Else
         rc = True
     End If
-    myRecordSet.Close
-    Set myRecordSet = Nothing
+    myRecordset.Close
+    Set myRecordset = Nothing
     class_exist = rc
 
 End Function
@@ -153,40 +154,42 @@ ErrorHandler2:
     Resume Cleanup
 End Sub
 
+
+
 Sub init_senshu(dummy As String)
 
-    Dim myRecordSet As New ADODB.Recordset
+    Dim myRecordset As New ADODB.Recordset
     Dim myquery As String
     Dim maxSwimmerNo As Integer
     myquery = "SELECT MAX(選手番号) as MAX from 選手 where 大会番号 = " & EventNo
-    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
-    maxSwimmerNo = myRecordSet!Max
+    myRecordset.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    maxSwimmerNo = myRecordset!Max
     
     ReDim Swimmer(maxSwimmerNo)
-    myRecordSet.Close
+    myRecordset.Close
     myquery = "SELECT 氏名, 選手番号 from 選手 where 大会番号 = " & EventNo
-    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
-    Do Until myRecordSet.EOF
-        Swimmer(myRecordSet!選手番号) = myRecordSet!氏名
-        myRecordSet.MoveNext
+    myRecordset.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    Do Until myRecordset.EOF
+        Swimmer(myRecordset!選手番号) = myRecordset!氏名
+        myRecordset.MoveNext
     Loop
-    myRecordSet.Close
-    Set myRecordSet = Nothing
+    myRecordset.Close
+    Set myRecordset = Nothing
 End Sub
 
-Public Function get_prgNo(printPrgNo As Integer) As Integer
-    Dim myRecordSet As New ADODB.Recordset
+Public Function GetPrgNofromPrintPrgNo(printPrgNo As Integer) As Integer
+    Dim myRecordset As New ADODB.Recordset
     Dim myquery As String
     myquery = "select 競技番号 from プログラム where 表示用競技番号=" & printPrgNo & _
               "and 大会番号= " & EventNo & ";"
-    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
-    get_prgNo = if_not_null(myRecordSet!競技番号)
-    myRecordSet.Close
-    Set myRecordSet = Nothing
+    myRecordset.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    GetPrgNofromPrintPrgNo = if_not_null(myRecordset!競技番号)
+    myRecordset.Close
+    Set myRecordset = Nothing
 End Function
-Sub get_race_title(ByVal PrgNo As Integer, ByRef Class As String, _
+Sub get_race_title(ByVal prgNo As Integer, ByRef Class As String, _
             ByRef genderStr As String, ByRef distance As String, ByRef styleNo As Integer)
-    Dim myRecordSet As New ADODB.Recordset
+    Dim myRecordset As New ADODB.Recordset
     Dim myquery As String
     Dim classExist As Boolean
     classExist = class_exist("")
@@ -197,28 +200,28 @@ Sub get_race_title(ByVal PrgNo As Integer, ByRef Class As String, _
               " INNER JOIN 距離 ON 距離.距離コード = プログラム.距離コード " + _
               " WHERE プログラム.大会番号 = " & EventNo & " AND " + _
               " クラス.大会番号 = " & EventNo & " AND " & _
-              " プログラム.競技番号 = " & PrgNo & ";"
+              " プログラム.競技番号 = " & prgNo & ";"
     Else
         myquery = "SELECT  プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, プログラム.種目コード as 種目 FROM プログラム " + _
               " INNER JOIN 距離 ON 距離.距離コード = プログラム.距離コード " + _
               " WHERE プログラム.大会番号 = " & EventNo & " AND " + _
-              " プログラム.競技番号 = " & PrgNo & ";"
+              " プログラム.競技番号 = " & prgNo & ";"
     End If
-    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
-    Do Until myRecordSet.EOF
+    myRecordset.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    Do Until myRecordset.EOF
         If classExist Then
-            Class = myRecordSet!クラス
+            Class = myRecordset!クラス
         Else
             Class = ""
         End If
-        genderStr = Gender(myRecordSet!性別)
-        distance = myRecordSet!距離
-        styleNo = myRecordSet!種目
-        myRecordSet.MoveNext
+        genderStr = Gender(myRecordset!性別)
+        distance = myRecordset!距離
+        styleNo = myRecordset!種目
+        myRecordset.MoveNext
     Loop
-    myRecordSet.Close
-    Set myRecordSet = Nothing
+    myRecordset.Close
+    Set myRecordset = Nothing
                 
               
     
@@ -273,7 +276,7 @@ Function ConvertTimeFormat(timeString As String)
 End Function
 ''eventNo, prgNo, className, genderName, distance, printenable
 
-Sub fill_out_form_relay(PrgNo As Integer, className As String, _
+Sub fill_out_form_relay(prgNo As Integer, className As String, _
                 genderName As String, distance As String, styleNo As Integer, printenable As Boolean)
     Dim myquery As String
     Dim junni As Integer
@@ -282,7 +285,7 @@ Sub fill_out_form_relay(PrgNo As Integer, className As String, _
 
 
 
-    Dim myRecordSet As New ADODB.Recordset
+    Dim myRecordset As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
     junni = 0
@@ -292,16 +295,16 @@ Sub fill_out_form_relay(PrgNo As Integer, className As String, _
             "記録.第１泳者, 記録.第２泳者, 記録.第３泳者, 記録.第４泳者, 記録.新記録印刷マーク " & _
             "FROM 記録 " & _
             " inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 " & _
-            " where   記録.競技番号 = " & PrgNo & _
+            " where   記録.競技番号 = " & prgNo & _
             " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
             " and リレーチーム.大会番号 = " & EventNo & _
             " and 記録.オープン = 0 " & _
             " order by ゴール asc;"
 
-    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
-    Do Until myRecordSet.EOF
+    myRecordset.Open myquery, MyCon, adOpenStatic, adLockReadOnly
+    Do Until myRecordset.EOF
         junnib = junnib + 1
-        If prevTime <> myRecordSet!ゴール Then
+        If prevTime <> myRecordset!ゴール Then
             junni = junnib
             If junni > CInt(formPrgNoPick.tbxJunniLast) Then
                 Exit Do
@@ -309,33 +312,33 @@ Sub fill_out_form_relay(PrgNo As Integer, className As String, _
             If junni < CInt(formPrgNoPick.tbxJunniTop) Then
                 GoTo DOLOOPEND
             End If
-            prevTime = myRecordSet!ゴール
+            prevTime = myRecordset!ゴール
         End If
-        Call fill_name(myRecordSet!チーム名)
+        Call fill_name(myRecordset!チーム名)
 
-        Call fill_shozoku(Swimmer(myRecordSet!第1泳者) & "・" & Swimmer(myRecordSet!第2泳者) & "・" & _
-                     Swimmer(myRecordSet!第3泳者) & "・" & Swimmer(myRecordSet!第4泳者))
+        Call fill_shozoku(Swimmer(myRecordset!第1泳者) & "・" & Swimmer(myRecordset!第2泳者) & "・" & _
+                     Swimmer(myRecordset!第3泳者) & "・" & Swimmer(myRecordset!第4泳者))
         
         Call fill_junni(junni)
          Call fill_class(className)
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
-        Call fill_time(ConvertTimeFormat(myRecordSet!ゴール) + " " + _
-            if_not_null_string(myRecordSet!新記録印刷マーク))
+        Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
+            if_not_null_string(myRecordset!新記録印刷マーク))
         If printenable Then
             Call print_it("")
         End If
 DOLOOPEND:
         
-        myRecordSet.MoveNext
+        myRecordset.MoveNext
     Loop
                     ' クローズと解放
-    myRecordSet.Close
+    myRecordset.Close
     'MyCon.Close
-    Set myRecordSet = Nothing
+    Set myRecordset = Nothing
     'Set MyCon = Nothing
 End Sub
 
-Sub fill_out_form_kojin(PrgNo As Integer, className As String, _
+Sub fill_out_form_kojin(prgNo As Integer, className As String, _
                     genderName As String, distance As String, styleNo As Integer, printenable As Boolean)
     Dim myquery As String
     Dim junni As Integer
@@ -343,7 +346,7 @@ Sub fill_out_form_kojin(PrgNo As Integer, className As String, _
     Dim prevTime As String
 
 
-    Dim myRecordSet As New ADODB.Recordset
+    Dim myRecordset As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
     junni = 0
@@ -353,19 +356,19 @@ Sub fill_out_form_kojin(PrgNo As Integer, className As String, _
     myquery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1, 記録.新記録印刷マーク " & _
         "FROM 記録 " & _
         " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
-        " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & PrgNo & _
+        " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
         " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
         " and 記録.オープン = 0 " & _
         " and 記録.選手番号>0 order by ゴール asc;"
 
-    myRecordSet.Open myquery, MyCon, adOpenStatic, adLockReadOnly
-    Do Until myRecordSet.EOF
+    myRecordset.Open myquery, MyCon, adOpenStatic, adLockReadOnly
+    Do Until myRecordset.EOF
         junnib = junnib + 1
-        If IsNull(myRecordSet!ゴール) Or myRecordSet!ゴール = "" Then
+        If IsNull(myRecordset!ゴール) Or myRecordset!ゴール = "" Then
             MsgBox ("該当データがありません。たぶんレースが終わっていないと思われます。")
             Exit Do
         End If
-        If prevTime <> myRecordSet!ゴール Then
+        If prevTime <> myRecordset!ゴール Then
 
             junni = junnib
             If junni > CInt(formPrgNoPick.tbxJunniLast) Then
@@ -374,26 +377,26 @@ Sub fill_out_form_kojin(PrgNo As Integer, className As String, _
             If junni < CInt(formPrgNoPick.tbxJunniTop) Then
                 GoTo LOOPEND2
             End If
-            prevTime = myRecordSet!ゴール
+            prevTime = myRecordset!ゴール
         End If
-        Call fill_name(myRecordSet!氏名)
-        Call fill_shozoku(myRecordSet!所属名称1)
+        Call fill_name(myRecordset!氏名)
+        Call fill_shozoku(myRecordset!所属名称1)
         Call fill_class(className)
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
-        Call fill_time(ConvertTimeFormat(myRecordSet!ゴール) + " " + _
-                 if_not_null_string(myRecordSet!新記録印刷マーク))
+        Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
+                 if_not_null_string(myRecordset!新記録印刷マーク))
         Call fill_junni(junni)
         If printenable Then
             Call print_it("")
         End If
 LOOPEND2:
        
-        myRecordSet.MoveNext
+        myRecordset.MoveNext
     Loop
             ' クローズと解放
-    myRecordSet.Close
+    myRecordset.Close
     'MyCon.Close
-    Set myRecordSet = Nothing
+    Set myRecordset = Nothing
     'Set MyCon = Nothing
 End Sub
 
@@ -454,7 +457,7 @@ Sub fill_shozoku(shozoku As String)
     End If
 End Sub
 
-Sub fill_out_form(PrgNo As Integer, printenable As Boolean)
+Sub fill_out_form(prgNo As Integer, printenable As Boolean)
 
     Dim myquery As String
 
@@ -464,22 +467,22 @@ Sub fill_out_form(PrgNo As Integer, printenable As Boolean)
     Dim distance As String
     Dim styleNo As Integer
     
-    Call get_race_title(PrgNo, className, genderName, distance, styleNo)
+    Call get_race_title(prgNo, className, genderName, distance, styleNo)
 
     '''------ 春季室内only 県外をopenにする---
     ' Call set_open_to_kengai
     '------------------------------------------
     If is_relay(styleNo) Then
-        Call fill_out_form_relay(PrgNo, className, genderName, distance, styleNo, printenable)
+        Call fill_out_form_relay(prgNo, className, genderName, distance, styleNo, printenable)
     Else
-        Call fill_out_form_kojin(PrgNo, className, genderName, distance, styleNo, printenable)
+        Call fill_out_form_kojin(prgNo, className, genderName, distance, styleNo, printenable)
     End If
     '-------- 春季室内only
     'Call reset_open
     '---------------------------------------------
 End Sub
 Sub BackOff()
-    ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
+    ''ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
 End Sub
 Sub BackOn()
     ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
@@ -542,4 +545,8 @@ Sub DisplayTextBoxName(txtBoxName As String)
         shp.TextFrame.TextRange = txtBoxName
     End If
 End Sub
+
+
+
+
 
