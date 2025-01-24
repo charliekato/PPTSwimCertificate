@@ -45,34 +45,68 @@ Sub StopProcess()
     Running = False
     ' Debug.Print "プロセスを停止しました。"
 End Sub
-
-Function AlreadyPrinted(printPrgNo As Integer) As Boolean
+Function GetFirstPrintNeededPrtPrgNo() As Integer
+    Dim sqlStr As String
+    Dim myRecordset As New ADODB.Recordset
+    
+    On Error GoTo ErrorHandler
+    
+    sqlStr = "SELECT 印刷状況, 印刷状況.競技番号, プログラム.表示用競技番号 as printPrgNo " & _
+             " FROM 印刷状況 " & _
+             " INNER JOIN プログラム ON プログラム.競技番号 = 印刷状況.競技番号 " & _
+             " WHERE  プログラム.大会番号 = " & HyouShow.EventNo & _
+             " and 印刷状況.大会番号 = " & HyouShow.EventNo & _
+             " order by プログラム.表示用競技番号"
+    myRecordset.Open sqlStr, HyouShow.MyCon, adOpenStatic, adLockReadOnly
+    Do Until myRecordset.EOF
+        If myRecordset!印刷状況 = 0 Then
+            GetFirstPrintNeededPrtPrgNo = myRecordset!printPrgNo
+            If RaceDone(GetFirstPrintNeededPrtPrgNo) Then
+                GoTo CloseExit
+            Else
+                GetFirstPrintNeededPrtPrgNo = 0
+                GoTo CloseExit
+            End If
+        End If
+        myRecordset.MoveNext
+    Loop
+    ' all races are printed.
+    GetFirstPrintNeededPrtPrgNo = 0
+CloseExit:
+    If Not myRecordset Is Nothing Then
+        If myRecordset.State = adStateOpen Then myRecordset.Close
+        Set myRecordset = Nothing
+    End If
+    Exit Function
+ErrorHandler:
+    Debug.Print "Error in GetFirstPrintNeededPrtPrgNo : " & Err.Description
+    GetFirstPrintNeededPrtPrgNo = 0
+    Resume CloseExit
+End Function
+Function RaceDone(printPrgNo As Integer) As Boolean
     Dim sqlStr As String
     Dim myRecordset As New ADODB.Recordset
 
     On Error GoTo ErrorHandler
 
     ' SQL文の作成
-    sqlStr = "SELECT 印刷状況, 印刷状況.競技番号 " & _
-             "FROM 印刷状況 " & _
-             "INNER JOIN プログラム ON プログラム.競技番号 = 印刷状況.競技番号 " & _
-             "WHERE プログラム.表示用競技番号 = " & printPrgNo & _
-             " and プログラム.大会番号 = " & HyouShow.EventNo & _
-             " and 印刷状況.大会番号 = " & HyouShow.EventNo
+    sqlStr = "SELECT 進行フラグ from プログラム" & _
+             " WHERE 表示用競技番号 = " & printPrgNo & _
+             " and 大会番号 = " & HyouShow.EventNo
 
     ' レコードセットを開く
     myRecordset.Open sqlStr, HyouShow.MyCon, adOpenStatic, adLockReadOnly
 
     ' レコードが存在しない場合のチェック
     If Not myRecordset.EOF Then
-        If myRecordset!印刷状況 = 1 Then
-            AlreadyPrinted = True
+        If myRecordset!進行フラグ = 2 Then
+            RaceDone = True
         Else
-            AlreadyPrinted = False
+            RaceDone = False
         End If
     Else
-        ' レコードが存在しない場合、Falseを返す
-        AlreadyPrinted = False
+        Debug.Print "No record found while executing " & sqlStr
+        RaceDone = False
     End If
 
 Cleanup:
@@ -85,18 +119,18 @@ Cleanup:
 
 ErrorHandler:
     Debug.Print "エラーが発生しました: " & Err.Description
-    AlreadyPrinted = False
+    RaceDone = False
     Resume Cleanup
 End Function
 Sub ExecuteTask()
     ' 処理を実行
     ''Debug.Print "タスクを実行しました: " & Now
     Dim printPrgNo As Integer
-    printPrgNo = GetLastPrintPrgNo
+    printPrgNo = GetFirstPrintNeededPrtPrgNo
     If printPrgNo > 0 Then
-        If AlreadyPrinted(printPrgNo) = False Then
-            Call PrintGo(printPrgNo)
-        End If
+
+        Call PrintGo(printPrgNo)
+
     End If
     ' 処理を継続する場合
     If Running Then
@@ -114,36 +148,7 @@ End Sub
 
 
 
-Function GetLastPrintPrgNo() As Integer
-    Dim sqlString As String
-    Dim myRecordset As New ADODB.Recordset
-    Dim lastPrintPrgNo As Integer
-    Dim yoketsuCode As Integer
-    
-    lastPrintPrgNo = 0
-    
-    sqlString = "select 表示用競技番号 , 進行フラグ, 予決コード  from プログラム " & _
-                " where 大会番号 = " & HyouShow.EventNo & _
-                " Order by 表示用競技番号"
-    myRecordset.Open sqlString, HyouShow.MyCon, adOpenStatic, adLockReadOnly
-    Do Until myRecordset.EOF
-        If myRecordset!進行フラグ = 1 Then
-            GoTo closeExit
-        End If
-        yoketsuCode = myRecordset!予決コード
-        If yoketsuCode < 7 And yoketsuCode > 2 Then
-            lastPrintPrgNo = myRecordset!表示用競技番号
-        Else
-            lastPrintPrgNo = 0
-        End If
-        myRecordset.MoveNext
-    Loop
-closeExit:
-    GetLastPrintPrgNo = lastPrintPrgNo
-    myRecordset.Close
-    Set myRecordset = Nothing
 
-End Function
 
 
 Private Sub btnClose_Click()
@@ -169,9 +174,9 @@ Sub SetPrintedFlag(target競技番号 As Integer)
 
 
     sql = "UPDATE 印刷状況 " & _
-          "SET 印刷状況 = 1 " & _
-          "WHERE 大会番号 = " & HyouShow.EventNo & " " & _
-          "AND 競技番号 = " & target競技番号 & ";"
+          " SET 印刷状況 = 1 " & _
+          " WHERE 大会番号 = " & HyouShow.EventNo & _
+          " AND 競技番号 = " & target競技番号 & ";"
 
 
     Set cmd = CreateObject("ADODB.Command")
