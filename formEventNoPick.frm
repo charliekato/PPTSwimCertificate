@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 '
 '  formEventNoPick
 '
@@ -155,7 +156,7 @@ Private Sub btnOK_Click()
     Gender(4) = "混合"
     Dim selectedItem As String
     Dim myRecordset As New ADODB.Recordset
-    Dim myquery As String
+    Dim myQuery As String
     Dim row As Integer
 
     selectedItem = listEvent.Value
@@ -165,7 +166,7 @@ Private Sub btnOK_Click()
     If HyouShow.class_exist("") Then
         Call add_list_item(0, "#", "クラス", "種目", "st")
         row = 1
-        myquery = "SELECT プログラム.表示用競技番号 as 競技番号, クラス.クラス名称 as クラス, " & _
+        myQuery = "SELECT プログラム.表示用競技番号 as 競技番号, クラス.クラス名称 as クラス, " & _
               "プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, 種目.種目 as 種目 FROM プログラム" + _
               " INNER JOIN 種目 ON 種目.種目コード = プログラム.種目コード " + _
@@ -175,7 +176,7 @@ Private Sub btnOK_Click()
               " クラス.大会番号 = " & HyouShow.EventNo & _
               " order by 競技番号 asc;"
               
-            myRecordset.Open myquery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+            myRecordset.Open myQuery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
             Do Until myRecordset.EOF
 
                 Call add_list_item(row, Right("   " & myRecordset!競技番号, 3), myRecordset!クラス, _
@@ -186,13 +187,13 @@ Private Sub btnOK_Click()
     Else
         Call add_list_item(0, "#", "", "種目", "")
         row = 1
-        myquery = "SELECT プログラム.競技番号 as 競技番号,  " & _
+        myQuery = "SELECT プログラム.競技番号 as 競技番号,  " & _
               "プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, 種目.種目 as 種目 FROM プログラム" + _
               " INNER JOIN 種目 ON 種目.種目コード = プログラム.種目コード " + _
               " INNER JOIN 距離 ON 距離.距離コード = プログラム.距離コード " + _
               " WHERE プログラム.大会番号 = " & HyouShow.EventNo & ";"
-            myRecordset.Open myquery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+            myRecordset.Open myQuery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
             Do Until myRecordset.EOF
                 Call add_list_item(row, Right("   " & myRecordset!競技番号, 3), "", _
                     Gender(myRecordset!性別) + myRecordset!距離 + myRecordset!種目, "")
@@ -207,7 +208,7 @@ Private Sub btnOK_Click()
     myRecordset.Close
     Set myRecordset = Nothing
     Call HyouShow.init_senshu("")
-    
+    Call HyouShow.init_class("")
     Unload Me
     formPrgNoPick.show vbModeless
 End Sub
