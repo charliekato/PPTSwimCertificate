@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 '
 '  formPrgNoPick
 '
@@ -206,10 +207,10 @@ Private Sub PrintGo(printPrgNo As Integer)
 End Sub
 Private Sub btnPrint_Click()
     Dim printPrgNo As Integer
-    On Error GoTo MyExit
+'    On Error GoTo MyExit
     printPrgNo = CInt(Left(listPrg.Value, 3))
     Call PrintGo(printPrgNo)
-MyExit:
+'MyExit:
 End Sub
 
 

@@ -8,7 +8,8 @@ Option Base 0
     Public Gender(4) As String
     Public Shumoku(8) As String
     Public Swimmer() As String
-
+    Public classMeisho() As String
+    Public MaxClassNo As Integer
 
 
 Sub init_gender(dummy As String)
@@ -30,9 +31,12 @@ Sub 賞状作成()
     Dim ss As formServerSelect
     Call init_gender("")
     Call init_shumoku("")
+
     
     Set ss = New formServerSelect
+       
     ss.show
+    
 End Sub
 
 
@@ -59,10 +63,10 @@ End Function
 
 Public Function class_exist(dummy As String) As Boolean
     Dim myRecordset As New ADODB.Recordset
-    Dim myquery As String
+    Dim myQuery As String
     Dim rc As Boolean
-    myquery = "select * from クラス where 大会番号 = " & EventNo
-    myRecordset.Open myquery, MyCon, adOpenStatic, adLockReadOnly
+    myQuery = "select * from クラス where 大会番号 = " & EventNo
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     If myRecordset.EOF Then
         rc = False
     Else
@@ -154,21 +158,38 @@ ErrorHandler2:
     Resume Cleanup
 End Sub
 
-
+Sub init_class(dummy As String)
+    Dim myRecordset As New ADODB.Recordset
+    Dim myQuery As String
+    Dim maxClassID As Integer
+    myQuery = "SELECT MAX(クラス番号) as MAX from クラス where 大会番号 = " & EventNo
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
+    MaxClassNo = myRecordset!Max
+    ReDim classMeisho(MaxClassNo)
+    myRecordset.Close
+    myQuery = "select クラス名称, クラス番号 from クラス where 大会番号 = " & EventNo
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
+    Do Until myRecordset.EOF
+        classMeisho(myRecordset!クラス番号) = myRecordset!クラス名称
+        myRecordset.MoveNext
+    Loop
+    myRecordset.Close
+    Set myRecordset = Nothing
+End Sub
 
 Sub init_senshu(dummy As String)
 
     Dim myRecordset As New ADODB.Recordset
-    Dim myquery As String
+    Dim myQuery As String
     Dim maxSwimmerNo As Integer
-    myquery = "SELECT MAX(選手番号) as MAX from 選手 where 大会番号 = " & EventNo
-    myRecordset.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    myQuery = "SELECT MAX(選手番号) as MAX from 選手 where 大会番号 = " & EventNo
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
     maxSwimmerNo = myRecordset!Max
     
     ReDim Swimmer(maxSwimmerNo)
     myRecordset.Close
-    myquery = "SELECT 氏名, 選手番号 from 選手 where 大会番号 = " & EventNo
-    myRecordset.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    myQuery = "SELECT 氏名, 選手番号 from 選手 where 大会番号 = " & EventNo
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
     Do Until myRecordset.EOF
         Swimmer(myRecordset!選手番号) = myRecordset!氏名
         myRecordset.MoveNext
@@ -179,41 +200,42 @@ End Sub
 
 Public Function GetPrgNofromPrintPrgNo(printPrgNo As Integer) As Integer
     Dim myRecordset As New ADODB.Recordset
-    Dim myquery As String
-    myquery = "select 競技番号 from プログラム where 表示用競技番号=" & printPrgNo & _
+    Dim myQuery As String
+    myQuery = "select 競技番号 from プログラム where 表示用競技番号=" & printPrgNo & _
               "and 大会番号= " & EventNo & ";"
-    myRecordset.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
     GetPrgNofromPrintPrgNo = if_not_null(myRecordset!競技番号)
     myRecordset.Close
     Set myRecordset = Nothing
 End Function
-Sub get_race_title(ByVal prgNo As Integer, ByRef Class As String, _
+
+Sub get_race_title(ByVal prgNo As Integer, ByRef classNo As Integer, _
             ByRef genderStr As String, ByRef distance As String, ByRef styleNo As Integer)
     Dim myRecordset As New ADODB.Recordset
-    Dim myquery As String
+    Dim myQuery As String
     Dim classExist As Boolean
     classExist = class_exist("")
     If classExist Then
-        myquery = "SELECT クラス.クラス名称 as クラス, プログラム.性別コード as 性別, " & _
+
+ 
+        myQuery = "SELECT プログラム.クラス番号 as クラス, プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, プログラム.種目コード as 種目 FROM プログラム " + _
-              " INNER JOIN クラス ON クラス.クラス番号=プログラム.クラス番号 " + _
-              " INNER JOIN 距離 ON 距離.距離コード = プログラム.距離コード " + _
+               " INNER JOIN 距離 ON 距離.距離コード = プログラム.距離コード " + _
               " WHERE プログラム.大会番号 = " & EventNo & " AND " + _
-              " クラス.大会番号 = " & EventNo & " AND " & _
               " プログラム.競技番号 = " & prgNo & ";"
     Else
-        myquery = "SELECT  プログラム.性別コード as 性別, " & _
+        myQuery = "SELECT  プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, プログラム.種目コード as 種目 FROM プログラム " + _
               " INNER JOIN 距離 ON 距離.距離コード = プログラム.距離コード " + _
               " WHERE プログラム.大会番号 = " & EventNo & " AND " + _
               " プログラム.競技番号 = " & prgNo & ";"
     End If
-    myRecordset.Open myquery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     Do Until myRecordset.EOF
         If classExist Then
-            Class = myRecordset!クラス
+            classNo = myRecordset!クラス
         Else
-            Class = ""
+            classNo = 0
         End If
         genderStr = Gender(myRecordset!性別)
         distance = myRecordset!距離
@@ -276,9 +298,9 @@ Function ConvertTimeFormat(timeString As String)
 End Function
 ''eventNo, prgNo, className, genderName, distance, printenable
 
-Sub fill_out_form_relay(prgNo As Integer, className As String, _
+Sub fill_out_form_relay(prgNo As Integer, classNo As Integer, _
                 genderName As String, distance As String, styleNo As Integer, printenable As Boolean)
-    Dim myquery As String
+    Dim myQuery As String
     Dim junni As Integer
     Dim junnib As Integer
     Dim prevTime As String
@@ -291,7 +313,7 @@ Sub fill_out_form_relay(prgNo As Integer, className As String, _
     junni = 0
     junnib = 0
     prevTime = ""
-    myquery = "SELECT リレーチーム.チーム名 as チーム名, 記録.ゴール as ゴール, " & _
+    myQuery = "SELECT リレーチーム.チーム名 as チーム名, 記録.ゴール as ゴール, " & _
             "記録.第１泳者, 記録.第２泳者, 記録.第３泳者, 記録.第４泳者, 記録.新記録印刷マーク " & _
             "FROM 記録 " & _
             " inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 " & _
@@ -299,9 +321,10 @@ Sub fill_out_form_relay(prgNo As Integer, className As String, _
             " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
             " and リレーチーム.大会番号 = " & EventNo & _
             " and 記録.オープン = 0 " & _
+            " and 記録.新記録判定クラス = " & classNo & _
             " order by ゴール asc;"
 
-    myRecordset.Open myquery, MyCon, adOpenStatic, adLockReadOnly
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     Do Until myRecordset.EOF
         junnib = junnib + 1
         If prevTime <> myRecordset!ゴール Then
@@ -320,7 +343,7 @@ Sub fill_out_form_relay(prgNo As Integer, className As String, _
                      Swimmer(myRecordset!第3泳者) & "・" & Swimmer(myRecordset!第4泳者))
         
         Call fill_junni(junni)
-         Call fill_class(className)
+        Call fill_class(classMeisho(classNo))
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
         Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
             if_not_null_string(myRecordset!新記録印刷マーク))
@@ -338,9 +361,11 @@ DOLOOPEND:
     'Set MyCon = Nothing
 End Sub
 
-Sub fill_out_form_kojin(prgNo As Integer, className As String, _
+
+
+Sub fill_out_form_kojin(prgNo As Integer, classNo As Integer, _
                     genderName As String, distance As String, styleNo As Integer, printenable As Boolean)
-    Dim myquery As String
+    Dim myQuery As String
     Dim junni As Integer
     Dim junnib As Integer
     Dim prevTime As String
@@ -353,15 +378,16 @@ Sub fill_out_form_kojin(prgNo As Integer, className As String, _
     junnib = 0
     prevTime = ""
     
-    myquery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1, 記録.新記録印刷マーク " & _
+    myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1, 記録.新記録印刷マーク " & _
         "FROM 記録 " & _
         " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
         " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
         " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
         " and 記録.オープン = 0 " & _
+        " and 記録.新記録判定クラス = " & classNo & _
         " and 記録.選手番号>0 order by ゴール asc;"
 
-    myRecordset.Open myquery, MyCon, adOpenStatic, adLockReadOnly
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     Do Until myRecordset.EOF
         junnib = junnib + 1
         If IsNull(myRecordset!ゴール) Or myRecordset!ゴール = "" Then
@@ -381,7 +407,7 @@ Sub fill_out_form_kojin(prgNo As Integer, className As String, _
         End If
         Call fill_name(myRecordset!氏名)
         Call fill_shozoku(myRecordset!所属名称1)
-        Call fill_class(className)
+        Call fill_class(classMeisho(classNo))
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
         Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
                  if_not_null_string(myRecordset!新記録印刷マーク))
@@ -459,23 +485,40 @@ End Sub
 
 Sub fill_out_form(prgNo As Integer, printenable As Boolean)
 
-    Dim myquery As String
+    Dim myQuery As String
 
-
+    Dim classNo As Integer
     Dim className As String
     Dim genderName As String
     Dim distance As String
     Dim styleNo As Integer
     
-    Call get_race_title(prgNo, className, genderName, distance, styleNo)
-
+    Call get_race_title(prgNo, classNo, genderName, distance, styleNo)
+    If classNo = 0 Then
+        className = ""
+    Else
+        className = classMeisho(classNo)
+    End If
     '''------ 春季室内only 県外をopenにする---
     ' Call set_open_to_kengai
     '------------------------------------------
-    If is_relay(styleNo) Then
-        Call fill_out_form_relay(prgNo, className, genderName, distance, styleNo, printenable)
+    If className <> "合同レース" Then
+        If is_relay(styleNo) Then
+            Call fill_out_form_relay(prgNo, classNo, genderName, distance, styleNo, printenable)
+        Else
+            Call fill_out_form_kojin(prgNo, classNo, genderName, distance, styleNo, printenable)
+        End If
     Else
-        Call fill_out_form_kojin(prgNo, className, genderName, distance, styleNo, printenable)
+
+        For classNo = 1 To MaxClassNo - 1 ' maxclassno is 合同レース
+            If classMeisho(classNo) <> "" Then
+                If is_relay(styleNo) Then
+                    Call fill_out_form_relay(prgNo, classNo, genderName, distance, styleNo, printenable)
+                Else
+                    Call fill_out_form_kojin(prgNo, classNo, genderName, distance, styleNo, printenable)
+                End If
+            End If
+        Next classNo
     End If
     '-------- 春季室内only
     'Call reset_open

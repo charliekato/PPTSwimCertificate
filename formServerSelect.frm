@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 '
 ' formServerSelect
 '
@@ -36,7 +37,7 @@ Private Sub btnOK_Click()
     serverName = txtBoxServerName.Text
 
     Dim myRecordset As New ADODB.Recordset
-    Dim myquery As String
+    Dim myQuery As String
     Unload Me
 '    On Error GoTo MyError
     Set HyouShow.MyCon = New ADODB.Connection
@@ -45,8 +46,8 @@ Private Sub btnOK_Click()
     Dim eventPick As formEventNoPick
     Set eventPick = New formEventNoPick
     
-    myquery = "SELECT ‘å‰ï”Ô†, ‘å‰ï–¼1 FROM ‘å‰ïİ’è"
-    myRecordset.Open myquery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    myQuery = "SELECT ‘å‰ï”Ô†, ‘å‰ï–¼1 FROM ‘å‰ïİ’è"
+    myRecordset.Open myQuery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
     Do Until myRecordset.EOF
         formEventNoPick.listEvent.AddItem Right("   " & myRecordset!‘å‰ï”Ô†, 3) & "   " & if_not_null_string(myRecordset!‘å‰ï–¼1)
         myRecordset.MoveNext
