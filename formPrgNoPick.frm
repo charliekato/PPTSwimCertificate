@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 '
 '  formPrgNoPick
 '
@@ -206,8 +207,9 @@ End Sub
 Private Sub PrintGo(printPrgNo As Integer)
     Dim prgNo As Integer
     prgNo = HyouShow.GetPrgNofromPrintPrgNo(printPrgNo)
-    Call fill_out_form(prgNo, True) ' if last argument is true then print else just preview
-    Call CheckPrinted(printPrgNo)
+    If fill_out_form(prgNo, True) Then
+        Call CheckPrinted(printPrgNo)
+    End If
 End Sub
 Private Sub btnPrint_Click()
     Dim printPrgNo As Integer
@@ -287,24 +289,7 @@ Function GetLineNoFromPrintPrgNo(printPrgNo As Integer) As Integer
     GetLineNoFromPrintPrgNo = 0
 End Function
 
-Private Sub cbxJunniShowMethod1_Click()
-    If cbxJunniShowMethod1.Value = True Then
-        cbxJunniShowMethod2.Value = False
-        cbxJunniShowMethod3.Value = False
-    End If
-End Sub
-Private Sub cbxJunniShowMethod2_Click()
-    If cbxJunniShowMethod2.Value = True Then
-        cbxJunniShowMethod1.Value = False
-        cbxJunniShowMethod3.Value = False
-    End If
-End Sub
-Private Sub cbxJunniShowMethod3_Click()
-    If cbxJunniShowMethod3.Value = True Then
-        cbxJunniShowMethod2.Value = False
-        cbxJunniShowMethod1.Value = False
-    End If
-End Sub
+
 
 Private Sub listPrg_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
     If KeyCode = vbKeyReturn Then
