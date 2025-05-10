@@ -17,7 +17,40 @@ Attribute VB_Exposed = False
 '
 '  formEventNoPick
 '
+Public classBasedRace As Boolean
+Public ClassExist As Boolean
 
+
+Public Function class_exist(dummy As String) As Boolean
+    Dim myRecordset As New ADODB.Recordset
+    Dim myQuery As String
+
+    myQuery = "select * from クラス where 大会番号 = " & EventNo
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
+    If myRecordset.EOF Then
+        class_exist = False
+    Else
+        class_exist = True
+    End If
+    myRecordset.Close
+    Set myRecordset = Nothing
+
+
+End Function
+
+Public Function class_based_race(dummy As String) As Boolean
+    Dim myQuery As String
+    Dim myRecordset As New ADODB.Recordset
+    myQuery = "SELECT COUNT(1) as NUM from プログラム where 大会番号=" & HyouShow.EventNo & " and クラス番号 > 0 "
+    myRecordset.Open myQuery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+    If myRecordset!NUM = 0 Then
+       class_based_race = False
+    Else
+      class_based_race = True
+    End If
+    myRecordset.Close
+    Set myRecordset = Nothing
+End Function
 
 Private Sub btnClose_Click()
     HyouShow.MyCon.Close
@@ -147,19 +180,7 @@ ErrorHandler:
 
 End Sub
 
-Public Function class_based_race() As Boolean
-    Dim myQuery As String
-    Dim myRecordset As New ADODB.Recordset
-    myQuery = "SELECT COUNT(1) as NUM from プログラム where 大会番号=" & HyouShow.EventNo & " and クラス番号 > 0 "
-    myRecordset.Open myQuery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
-    If myRecordset!NUM = 0 Then
-       class_based_race = False
-    Else
-      class_based_race = True
-    End If
-    myRecordset.Close
-    Set myRecordset = Nothing
-End Function
+
 
 Private Sub btnOK_Click()
     Dim Gender(5) As String
@@ -176,7 +197,9 @@ Private Sub btnOK_Click()
     HyouShow.EventNo = CInt(Left(selectedItem, 3))
     Call CreateTableIfNotExists
     CopyToPrintStatusIfNotExists (HyouShow.EventNo)
-    If HyouShow.class_exist("") And class_based_race Then
+    classBasedRace = class_based_race("")
+    ClassExist = class_exist("")
+    If ClassExist And classBasedRace Then
         Call add_list_item(0, "#", "クラス", "種目", "st")
         row = 1
         myQuery = "SELECT プログラム.表示用競技番号 as 競技番号, クラス.クラス名称 as クラス, " & _
@@ -221,7 +244,9 @@ Private Sub btnOK_Click()
     myRecordset.Close
     Set myRecordset = Nothing
     Call HyouShow.init_senshu("")
-    Call HyouShow.init_class
+    If ClassExist Then
+        Call HyouShow.init_class
+    End If
     
     Unload Me
     formPrgNoPick.show vbModeless

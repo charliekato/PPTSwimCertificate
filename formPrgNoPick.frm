@@ -163,7 +163,7 @@ End Sub
 '---- error ---
 Private Sub btnPreView_Click()
     Dim printPrgNo As Integer
-    On Error GoTo subEnd
+ '   On Error GoTo subEnd
 
     printPrgNo = CInt(Left(listPrg.Value, 3))
   

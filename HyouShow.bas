@@ -12,6 +12,7 @@ Option Base 0
 
     Public ClassTable() As String
 
+
 Sub init_gender(dummy As String)
     Gender(1) = "男子"
     Gender(2) = "女子"
@@ -58,22 +59,6 @@ End Function
 
 
 
-Public Function class_exist(dummy As String) As Boolean
-    Dim myRecordset As New ADODB.Recordset
-    Dim myQuery As String
-    Dim rc As Boolean
-    myQuery = "select * from クラス where 大会番号 = " & EventNo
-    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
-    If myRecordset.EOF Then
-        rc = False
-    Else
-        rc = True
-    End If
-    myRecordset.Close
-    Set myRecordset = Nothing
-    class_exist = rc
-
-End Function
 
 Sub set_open_to_kengai()
     Dim sql1 As String
@@ -192,9 +177,11 @@ Sub get_race_title(ByVal prgNo As Integer, ByRef Class As String, _
             ByRef genderStr As String, ByRef distance As String, ByRef styleNo As Integer)
     Dim myRecordset As New ADODB.Recordset
     Dim myQuery As String
-    Dim classExist As Boolean
-    classExist = class_exist("") And formEventNoPick.class_based_race()
-    If classExist Then
+    Dim classBasedRace As Boolean
+    classBasedRace = formEventNoPick.class_based_race("")
+     
+    
+    If formEventNoPick.class_based_race("") Then
         myQuery = "SELECT クラス.クラス名称 as クラス, プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, プログラム.種目コード as 種目 FROM プログラム " + _
               " INNER JOIN クラス ON クラス.クラス番号=プログラム.クラス番号 " + _
@@ -211,7 +198,7 @@ Sub get_race_title(ByVal prgNo As Integer, ByRef Class As String, _
     End If
     myRecordset.Open myQuery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
     Do Until myRecordset.EOF
-        If classExist Then
+        If classBasedRace Then
             Class = myRecordset!クラス
         Else
             Class = ""
@@ -621,6 +608,7 @@ Sub init_class()
     Dim myRecordset As New ADODB.Recordset
     myQuery = "SELECT MAX(クラス番号) as MAX from クラス where 大会番号 = " & EventNo
     myRecordset.Open myQuery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
+
     MaxClassNo = myRecordset!Max
     
     ReDim ClassTable(MaxClassNo)
@@ -652,7 +640,7 @@ Function fill_out_form(prgNo As Integer, printenable As Boolean) As Boolean
     
     Call get_race_title(prgNo, className, genderName, distance, styleNo)
 
-    If className <> "" Then
+    If className <> "" Or formEventNoPick.class_exist("") = False Then
     '''------ 春季室内only 県外をopenにする---
     ' Call set_open_to_kengai
     '------------------------------------------
