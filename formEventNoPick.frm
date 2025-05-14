@@ -14,6 +14,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
+
 '
 '  formEventNoPick
 '
@@ -223,7 +224,7 @@ Private Sub btnOK_Click()
     Else
         Call add_list_item(0, "#", "", "種目", "")
         row = 1
-        myQuery = "SELECT プログラム.競技番号 as 競技番号,  " & _
+        myQuery = "SELECT プログラム.表示用競技番号 as 競技番号,  " & _
               "プログラム.性別コード as 性別, " & _
               "距離.距離 as 距離, 種目.種目 as 種目 FROM プログラム" + _
               " INNER JOIN 種目 ON 種目.種目コード = プログラム.種目コード " + _
