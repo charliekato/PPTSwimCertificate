@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} formEventNoPick 
    Caption         =   "大会選択"
-   ClientHeight    =   6902
+   ClientHeight    =   6900
    ClientLeft      =   96
    ClientTop       =   408
-   ClientWidth     =   6804
+   ClientWidth     =   6984
    OleObjectBlob   =   "formEventNoPick.frx":0000
    StartUpPosition =   1  'オーナー フォームの中央
 End
@@ -246,7 +246,7 @@ Private Sub btnOK_Click()
     Set myRecordset = Nothing
     Call HyouShow.init_senshu("")
     If ClassExist Then
-        Call HyouShow.init_class
+        Call HyouShow.init_class("")
     End If
     
     Unload Me

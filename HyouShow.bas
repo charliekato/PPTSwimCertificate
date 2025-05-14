@@ -265,6 +265,7 @@ End Function
 ''eventNo, prgNo, className, genderName, distance, printenable
 Function fill_out_form_relay_with_class(prgNo As Integer, classNo As Integer, _
                 genderName As String, distance As String, styleNo As Integer, printenable As Boolean) As Boolean
+                
     Dim myQuery As String
     Dim junni As Integer
     Dim junnib As Integer
@@ -275,6 +276,10 @@ Function fill_out_form_relay_with_class(prgNo As Integer, classNo As Integer, _
     Dim myRecordset As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
+    If formOption.cbxRelay.Value = False Then
+        fill_out_form_relay_with_class = False
+        Exit Function
+    End If
     fill_out_form_relay_with_class = True
     junni = 0
     junnib = 0
@@ -300,10 +305,10 @@ Function fill_out_form_relay_with_class(prgNo As Integer, classNo As Integer, _
         End If
         If prevTime <> myRecordset!ゴール Then
             junni = junnib
-            If junni > CInt(FormOption.tbxJunniLast) Then
+            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
                 Exit Do
             End If
-            If junni < CInt(FormOption.tbxJunniTop) Then
+            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
                 GoTo DOLOOPEND
             End If
             prevTime = myRecordset!ゴール
@@ -345,6 +350,10 @@ Function fill_out_form_relay(prgNo As Integer, className As String, _
     Dim myRecordset As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
+    If formOption.cbxRelay.Value = False Then
+        fill_out_form_relay = False
+        Exit Function
+    End If
     fill_out_form_relay = True
     junni = 0
     junnib = 0
@@ -369,10 +378,10 @@ Function fill_out_form_relay(prgNo As Integer, className As String, _
         End If
         If prevTime <> myRecordset!ゴール Then
             junni = junnib
-            If junni > CInt(FormOption.tbxJunniLast) Then
+            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
                 Exit Do
             End If
-            If junni < CInt(FormOption.tbxJunniTop) Then
+            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
                 GoTo DOLOOPEND
             End If
             prevTime = myRecordset!ゴール
@@ -412,6 +421,10 @@ Function fill_out_form_kojin_with_class(prgNo As Integer, classNo As Integer, _
     Dim myRecordset As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
+    If formOption.cbxIndivisual.Value = False Then
+        fill_out_form_kojin_with_class = False
+        Exit Function
+    End If
     fill_out_form_kojin_with_class = True
     junni = 0
     junnib = 0
@@ -437,10 +450,10 @@ Function fill_out_form_kojin_with_class(prgNo As Integer, classNo As Integer, _
         If prevTime <> myRecordset!ゴール Then
 
             junni = junnib
-            If junni > CInt(FormOption.tbxJunniLast) Then
+            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
                 Exit Do
             End If
-            If junni < CInt(FormOption.tbxJunniTop) Then
+            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
                 GoTo LOOPEND2
             End If
             prevTime = myRecordset!ゴール
@@ -477,6 +490,10 @@ Function fill_out_form_kojin(prgNo As Integer, className As String, _
     Dim myRecordset As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
+    If formOption.cbxIndivisual.Value = False Then
+        fill_out_form_kojin = False
+        Exit Function
+    End If
     fill_out_form_kojin = True
     junni = 0
     junnib = 0
@@ -501,10 +518,10 @@ Function fill_out_form_kojin(prgNo As Integer, className As String, _
         If prevTime <> myRecordset!ゴール Then
 
             junni = junnib
-            If junni > CInt(FormOption.tbxJunniLast) Then
+            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
                 Exit Do
             End If
-            If junni < CInt(FormOption.tbxJunniTop) Then
+            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
                 GoTo LOOPEND2
             End If
             prevTime = myRecordset!ゴール
@@ -531,7 +548,7 @@ LOOPEND2:
 End Function
 
 Sub fill_time(myTime As String)
-    If FormOption.cbxTime.Value Then
+    If formOption.cbxTime.Value Then
         Call show("タイム", myTime)
     Else
         Call show("タイム", "")
@@ -539,14 +556,14 @@ Sub fill_time(myTime As String)
 End Sub
 
 Sub fill_class(className As String)
-    If FormOption.cbxClass.Value Then
+    If formOption.cbxClass.Value Then
         Call show("クラス", className)
     Else
         Call show("クラス", "")
     End If
 End Sub
 Sub fill_shumoku(Shumoku As String)
-    If FormOption.cbxStyle.Value Then
+    If formOption.cbxStyle.Value Then
         Call show("種目", Shumoku)
     Else
         Call show("種目", "")
@@ -554,12 +571,12 @@ Sub fill_shumoku(Shumoku As String)
 End Sub
 
 Sub fill_junni(junni As Integer)
-    If FormOption.cbxJunni.Value Then
-        If FormOption.cbxJunniShowMethod1.Value Then
+    If formOption.cbxJunni.Value Then
+        If formOption.cbxJunniShowMethod1.Value Then
             Call show("順位", "" & junni)
-        ElseIf FormOption.cbxJunniShowMethod2.Value Then
+        ElseIf formOption.cbxJunniShowMethod2.Value Then
             Call show("順位", "第" & junni & "位")
-        ElseIf FormOption.cbxJunniShowMethod3.Value Then
+        ElseIf formOption.cbxJunniShowMethod3.Value Then
             If junni = 1 Then
                 Call show("順位", "優勝")
             Else
@@ -583,7 +600,7 @@ End Sub
 
 
 Sub fill_name(myName As String)
-    If FormOption.cbxName.Value Then
+    If formOption.cbxName.Value Then
         Call show("選手名", myName)
     Else
         Call show("選手名", "")
@@ -591,7 +608,7 @@ Sub fill_name(myName As String)
 End Sub
 
 Sub fill_shozoku(shozoku As String)
-    If FormOption.cbxBelongsTo.Value Then
+    If formOption.cbxBelongsTo.Value Then
         Call show("所属", shozoku)
     Else
         Call show("所属", "")
@@ -599,7 +616,7 @@ Sub fill_shozoku(shozoku As String)
 End Sub
 
 
-Sub init_class()
+Sub init_class(dummy As String)
     Dim myQuery As String
 
 
@@ -671,18 +688,35 @@ Function fill_out_form(prgNo As Integer, printenable As Boolean) As Boolean
     End If
 End Function
 Sub BackOff()
-    ''ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
-End Sub
-Sub BackOn()
     ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
 End Sub
+
 Sub print_it(dummy As String)
     ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
     ActivePresentation.PrintOut From:=1, To:=1, Copies:=1
     ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
 End Sub
 
+Sub BackOn()
+    Dim sld As slide
+    Dim imagePath As String
 
+    
+    ' JPEGファイルのフルパスを指定（例：C:\Users\YourName\Pictures\bg.jpg）
+    imagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\中体連.jpg"
+    'imagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\賞状滋賀県.jpg"
+    
+    ' スライド1を取得
+    Set sld = ActivePresentation.Slides(1)
+    sld.FollowMasterBackground = msoFalse
+    ' 背景を設定
+    With sld.Background.Fill
+        .Visible = msoTrue
+        .UserPicture imagePath
+    End With
+    sld.FollowMasterBackground = msoFalse
+    
+End Sub
 
 
 Sub name_text_box(boxNo As Integer, myName As String)
