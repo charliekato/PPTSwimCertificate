@@ -11,8 +11,38 @@ Option Base 0
     Public MaxClassNo As Integer
 
     Public ClassTable() As String
+'''---------------------------------
+''' 背景の設定
+'''--------------------------------
 
+'背景の画像のpath
+Const ImagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\中体連.jpg"
+'Const ImagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\賞状滋賀県.jpg"
 
+'Const ImagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\滋賀県ジュニア.png"
+
+'Const ImagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\いずみ21OPEN.png"
+    
+Sub BackOn()
+    Dim sld As slide
+
+    
+
+    '
+    ' スライド1を取得
+    Set sld = ActivePresentation.Slides(1)
+    sld.FollowMasterBackground = msoFalse
+    ' 背景を設定
+    With sld.Background.Fill
+        .Visible = msoTrue
+        .UserPicture ImagePath
+    End With
+    sld.FollowMasterBackground = msoFalse
+    
+End Sub
+Sub BackOff()
+    ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
+End Sub
 Sub init_gender(dummy As String)
     Gender(1) = "男子"
     Gender(2) = "女子"
@@ -687,9 +717,7 @@ Function fill_out_form(prgNo As Integer, printenable As Boolean) As Boolean
         Next classNo
     End If
 End Function
-Sub BackOff()
-    ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
-End Sub
+
 
 Sub print_it(dummy As String)
     ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
@@ -697,26 +725,7 @@ Sub print_it(dummy As String)
     ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
 End Sub
 
-Sub BackOn()
-    Dim sld As slide
-    Dim imagePath As String
 
-    
-    ' JPEGファイルのフルパスを指定（例：C:\Users\YourName\Pictures\bg.jpg）
-    imagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\中体連.jpg"
-    'imagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\賞状滋賀県.jpg"
-    
-    ' スライド1を取得
-    Set sld = ActivePresentation.Slides(1)
-    sld.FollowMasterBackground = msoFalse
-    ' 背景を設定
-    With sld.Background.Fill
-        .Visible = msoTrue
-        .UserPicture imagePath
-    End With
-    sld.FollowMasterBackground = msoFalse
-    
-End Sub
 
 
 Sub name_text_box(boxNo As Integer, myName As String)
