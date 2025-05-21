@@ -66,12 +66,13 @@ Private Sub listEvent_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shif
     End If
 End Sub
 
-Sub add_list_item(row As Integer, item1 As String, item2 As String, item3 As String, item4 As String)
+Sub add_list_item(row As Integer, item1 As String, item2 As String, item3 As String, item4 As String, item5 As String)
     formPrgNoPick.listPrg.AddItem ("")
     formPrgNoPick.listPrg.List(row, 0) = item1
     formPrgNoPick.listPrg.List(row, 1) = item2
     formPrgNoPick.listPrg.List(row, 2) = item3
     formPrgNoPick.listPrg.List(row, 3) = item4
+    formPrgNoPick.listPrg.List(row, 4) = item5
 
 End Sub
 
@@ -189,6 +190,10 @@ Private Sub btnOK_Click()
     Gender(2) = "女子"
     Gender(3) = "混成"
     Gender(4) = "混合"
+    Dim Yk(10) As String
+    Yk(3) = "タイム決勝"
+    Yk(5) = "A決勝"
+    Yk(6) = "決勝"
     Dim selectedItem As String
     Dim myRecordset As New ADODB.Recordset
     Dim myQuery As String
@@ -200,40 +205,48 @@ Private Sub btnOK_Click()
     CopyToPrintStatusIfNotExists (HyouShow.EventNo)
     classBasedRace = class_based_race("")
     ClassExist = class_exist("")
+    formPrgNoPick.listPrg.Width = 340
+    formPrgNoPick.listPrg.ColumnCount = 5
+
     If ClassExist And classBasedRace Then
-        Call add_list_item(0, "#", "クラス", "種目", "st")
+        formPrgNoPick.listPrg.ColumnWidths = "30pt;90pt;105pt;70pt;25pt"
+        Call add_list_item(0, "No.", "クラス", "種目", "予/決", "st")
         row = 1
         myQuery = "SELECT プログラム.表示用競技番号 as 競技番号, クラス.クラス名称 as クラス, " & _
-              "プログラム.性別コード as 性別, " & _
+              "プログラム.性別コード as 性別, プログラム.予決コード," & _
               "距離.距離 as 距離, 種目.種目 as 種目 FROM プログラム" + _
               " INNER JOIN 種目 ON 種目.種目コード = プログラム.種目コード " + _
               " INNER JOIN クラス ON クラス.クラス番号=プログラム.クラス番号 " + _
               " INNER JOIN 距離 ON 距離.距離コード = プログラム.距離コード " + _
               " WHERE プログラム.大会番号 = " & HyouShow.EventNo & " AND " + _
               " クラス.大会番号 = " & HyouShow.EventNo & _
-              " order by 競技番号 asc;"
+              " and (プログラム.予決コード=3 or プログラム.予決コード=5 or プログラム.予決コード=6) " & _
+              " order by プログラム.表示用競技番号 asc;"
               
             myRecordset.Open myQuery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
             Do Until myRecordset.EOF
 
                 Call add_list_item(row, Right("   " & myRecordset!競技番号, 3), myRecordset!クラス, _
-                    Gender(myRecordset!性別) + myRecordset!距離 + myRecordset!種目, "")
+                    Gender(myRecordset!性別) + myRecordset!距離 + myRecordset!種目, Yk(myRecordset!予決コード), "")
                 row = row + 1
                 myRecordset.MoveNext
             Loop
     Else
-        Call add_list_item(0, "#", "", "種目", "")
+        formPrgNoPick.listPrg.ColumnWidths = "30pt;20pt;120pt;130pt;20pt"
+        Call add_list_item(0, "No.", "", "種目", "予/決", "st")
         row = 1
         myQuery = "SELECT プログラム.表示用競技番号 as 競技番号,  " & _
-              "プログラム.性別コード as 性別, " & _
+              "プログラム.性別コード as 性別, プログラム.予決コード," & _
               "距離.距離 as 距離, 種目.種目 as 種目 FROM プログラム" + _
               " INNER JOIN 種目 ON 種目.種目コード = プログラム.種目コード " + _
               " INNER JOIN 距離 ON 距離.距離コード = プログラム.距離コード " + _
-              " WHERE プログラム.大会番号 = " & HyouShow.EventNo & ";"
+              " WHERE プログラム.大会番号 = " & HyouShow.EventNo & _
+              " and (プログラム.予決コード=3 or プログラム.予決コード=5 or プログラム.予決コード=6) " & _
+              " order by プログラム.表示用競技番号 asc;"
             myRecordset.Open myQuery, HyouShow.MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
             Do Until myRecordset.EOF
                 Call add_list_item(row, Right("   " & myRecordset!競技番号, 3), "", _
-                    Gender(myRecordset!性別) + myRecordset!距離 + myRecordset!種目, "")
+                    Gender(myRecordset!性別) + myRecordset!距離 + myRecordset!種目, Yk(myRecordset!予決コード), "")
 
                 row = row + 1
                 myRecordset.MoveNext

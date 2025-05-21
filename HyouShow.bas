@@ -1,6 +1,14 @@
 Attribute VB_Name = "HyouShow"
+#If VBA7 Then
+    Private Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As LongPtr)
+#Else
+    Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+#End If
+
 Option Explicit
 Option Base 0
+Const DefaultServerName = "localhost"
+Const DebugMode As Boolean = True   ' false にしておくこと!!
 
     Public MyCon As ADODB.Connection
     Public EventNo As Integer
@@ -11,38 +19,7 @@ Option Base 0
     Public MaxClassNo As Integer
 
     Public ClassTable() As String
-'''---------------------------------
-''' 背景の設定
-'''--------------------------------
 
-'背景の画像のpath
-Const ImagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\中体連.jpg"
-'Const ImagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\賞状滋賀県.jpg"
-
-'Const ImagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\滋賀県ジュニア.png"
-
-'Const ImagePath = "C:\Users\user\OneDrive\MyPrograms\VBA\賞状印刷システム\いずみ21OPEN.png"
-    
-Sub BackOn()
-    Dim sld As slide
-
-    
-
-    '
-    ' スライド1を取得
-    Set sld = ActivePresentation.Slides(1)
-    sld.FollowMasterBackground = msoFalse
-    ' 背景を設定
-    With sld.Background.Fill
-        .Visible = msoTrue
-        .UserPicture ImagePath
-    End With
-    sld.FollowMasterBackground = msoFalse
-    
-End Sub
-Sub BackOff()
-    ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
-End Sub
 Sub init_gender(dummy As String)
     Gender(1) = "男子"
     Gender(2) = "女子"
@@ -62,8 +39,9 @@ Sub 賞状作成()
     Dim ss As formServerSelect
     Call init_gender("")
     Call init_shumoku("")
-    
+
     Set ss = New formServerSelect
+    ss.txtBoxServerName = DefaultServerName
     ss.show
 End Sub
 
@@ -388,16 +366,35 @@ Function fill_out_form_relay(prgNo As Integer, className As String, _
     junni = 0
     junnib = 0
     prevTime = ""
-    myQuery = "SELECT リレーチーム.チーム名 as チーム名, 記録.ゴール as ゴール, " & _
+'''''''--------------------------here here here 5/20 '''''''''''''''''''''''''''''''''
+
+    If formOption.cbxUseOfficialName = True Then '''' 中体連仕様
+        myQuery = "SELECT 所属.所属名正式 as チーム名, 記録.ゴール as ゴール, " & _
+             "記録.第１泳者, 記録.第２泳者, 記録.第３泳者, 記録.第４泳者, 記録.新記録印刷マーク " & _
+             "FROM 記録 " & _
+            " inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 " & _
+            " inner join 所属 on リレーチーム.所属番号 = 所属.所属番号" & _
+            " inner join 所属 on リレーチーム.所属番号 = 所属.所属番号 " & _
+            " inner join 所属 on リレーチーム.所属番号 = 所属.所属番号 " & _
+            " where   記録.競技番号 = " & prgNo & _
+            " and 所属.大会番号 = " & EventNo & _
+            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
+            " and リレーチーム.大会番号 = " & EventNo & _
+            " and 記録.水路 < 11 " & _
+            " and 記録.オープン = 0 " & _
+            " order by ゴール asc;"
+    Else
+        myQuery = "SELECT リレーチーム.チーム名 as チーム名, 記録.ゴール as ゴール, " & _
             "記録.第１泳者, 記録.第２泳者, 記録.第３泳者, 記録.第４泳者, 記録.新記録印刷マーク " & _
             "FROM 記録 " & _
             " inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 " & _
             " where   記録.競技番号 = " & prgNo & _
             " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
             " and リレーチーム.大会番号 = " & EventNo & _
+            " and 記録.水路 < 11 " & _
             " and 記録.オープン = 0 " & _
             " order by ゴール asc;"
-
+    End If
     myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     Do Until myRecordset.EOF
         junnib = junnib + 1
@@ -446,8 +443,7 @@ Function fill_out_form_kojin_with_class(prgNo As Integer, classNo As Integer, _
     Dim junni As Integer
     Dim junnib As Integer
     Dim prevTime As String
-
-
+    
     Dim myRecordset As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
@@ -459,16 +455,30 @@ Function fill_out_form_kojin_with_class(prgNo As Integer, classNo As Integer, _
     junni = 0
     junnib = 0
     prevTime = ""
-    
-    myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1, 記録.新記録印刷マーク " & _
+
+    If formOption.cbxUseOfficialName = True Then
+        myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 所属.所属名正式 sd 所属名, 記録.新記録印刷マーク " & _
+            "FROM 記録 " & _
+            " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
+            " inner join 所属 on 選手.所属番号1=所属.所属番号 " & _
+            " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
+            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
+            " and 記録.オープン = 0 " & _
+            " and 記録.新記録判定クラス = " & classNo & _
+            " and 記録.水路 < 11 " & _
+            " and 記録.選手番号>0 order by ゴール asc;"
+    Else
+        myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1 as 所属名, 記録.新記録印刷マーク" & _
         "FROM 記録 " & _
         " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
         " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
         " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
         " and 記録.オープン = 0 " & _
         " and 記録.新記録判定クラス = " & classNo & _
+        " and 記録.水路 < 11 " & _
         " and 記録.選手番号>0 order by ゴール asc;"
 
+    End If
     myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     Do Until myRecordset.EOF
         junnib = junnib + 1
@@ -489,7 +499,7 @@ Function fill_out_form_kojin_with_class(prgNo As Integer, classNo As Integer, _
             prevTime = myRecordset!ゴール
         End If
         Call fill_name(myRecordset!氏名)
-        Call fill_shozoku(myRecordset!所属名称1)
+        Call fill_shozoku(myRecordset!所属名)
         Call fill_class(ClassTable(classNo))
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
         Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
@@ -528,15 +538,28 @@ Function fill_out_form_kojin(prgNo As Integer, className As String, _
     junni = 0
     junnib = 0
     prevTime = ""
-    
-    myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1, 記録.新記録印刷マーク " & _
-        "FROM 記録 " & _
-        " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
-        " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
-        " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
-        " and 記録.オープン = 0 " & _
-        " and 記録.選手番号>0 order by ゴール asc;"
-
+        
+    If formOption.cbxUseOfficialName = True Then
+        myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 所属.所属名正式 as 所属名, 記録.新記録印刷マーク " & _
+            "FROM 記録 " & _
+            " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
+            " inner join 所属 on 所属.所属名 = 選手.所属名称1 " & _
+            " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
+            " and 所属.大会番号 = " & EventNo & _
+            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
+            " and 記録.水路<11 " & _
+            " and 記録.オープン = 0 " & _
+            " and 記録.選手番号>0 order by ゴール asc;"
+    Else
+        myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1 as 所属名, 記録.新記録印刷マーク " & _
+            "FROM 記録 " & _
+            " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
+            " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
+            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
+            " and 記録.水路<11 " & _
+            " and 記録.オープン = 0 " & _
+            " and 記録.選手番号>0 order by ゴール asc;"
+    End If
     myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     Do Until myRecordset.EOF
         junnib = junnib + 1
@@ -557,7 +580,7 @@ Function fill_out_form_kojin(prgNo As Integer, className As String, _
             prevTime = myRecordset!ゴール
         End If
         Call fill_name(myRecordset!氏名)
-        Call fill_shozoku(myRecordset!所属名称1)
+        Call fill_shozoku(myRecordset!所属名)
         Call fill_class(className)
         Call fill_shumoku(genderName + distance + Shumoku(styleNo))
         Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
@@ -720,9 +743,13 @@ End Function
 
 
 Sub print_it(dummy As String)
-    ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
-    ActivePresentation.PrintOut From:=1, To:=1, Copies:=1
-    ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
+    If DebugMode Then
+        Sleep 1000
+    Else
+        ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
+        ActivePresentation.PrintOut From:=1, To:=1, Copies:=1
+        ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
+    End If
 End Sub
 
 
