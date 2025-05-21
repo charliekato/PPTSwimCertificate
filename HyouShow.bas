@@ -8,7 +8,7 @@ Attribute VB_Name = "HyouShow"
 Option Explicit
 Option Base 0
 Const DefaultServerName = "localhost"
-Const DebugMode As Boolean = True   ' false ‚É‚µ‚Ä‚¨‚­‚±‚Æ!!
+Const DebugMode As Boolean = False   ' false ‚É‚µ‚Ä‚¨‚­‚±‚Æ!!
 
     Public MyCon As ADODB.Connection
     Public EventNo As Integer

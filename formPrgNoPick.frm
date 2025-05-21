@@ -15,6 +15,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 
+
 '
 '  formPrgNoPick
 '
@@ -238,7 +239,7 @@ Sub SetDoneFlagOnList(printPrgNo As Integer)
         MsgBox "Error: SetDoneFlagOnList ŠY“–‚·‚é€–Ú‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB"
         Exit Sub
     End If
-    listPrg.List(targetIndex, 3) = "Ï"
+    listPrg.List(targetIndex, 4) = "Ï"
 
 
  

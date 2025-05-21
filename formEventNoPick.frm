@@ -15,6 +15,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 
+
 '
 '  formEventNoPick
 '
@@ -54,8 +55,10 @@ Public Function class_based_race(dummy As String) As Boolean
 End Function
 
 Private Sub btnClose_Click()
+
     HyouShow.MyCon.Close
-    HyouShow.MyCon = Nothing
+    Set HyouShow.MyCon = Nothing
+
     Unload Me
 End Sub
 
@@ -207,10 +210,11 @@ Private Sub btnOK_Click()
     ClassExist = class_exist("")
     formPrgNoPick.listPrg.Width = 340
     formPrgNoPick.listPrg.ColumnCount = 5
+    formPrgNoPick.Caption = selectedItem + "  　競技選択"
 
     If ClassExist And classBasedRace Then
         formPrgNoPick.listPrg.ColumnWidths = "30pt;90pt;105pt;70pt;25pt"
-        Call add_list_item(0, "No.", "クラス", "種目", "予/決", "st")
+        Call add_list_item(0, "#", "クラス", "種目", "予/決", "st")
         row = 1
         myQuery = "SELECT プログラム.表示用競技番号 as 競技番号, クラス.クラス名称 as クラス, " & _
               "プログラム.性別コード as 性別, プログラム.予決コード," & _
