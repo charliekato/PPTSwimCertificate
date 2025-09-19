@@ -14,6 +14,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
+
 #If VBA7 Then
     Private Declare PtrSafe Function ImmGetContext Lib "imm32.dll" (ByVal hWnd As LongPtr) As LongPtr
     Private Declare PtrSafe Function ImmSetConversionStatus Lib "imm32.dll" (ByVal hIMC As LongPtr, ByVal Conversion As Long, ByVal Sentence As Long) As Long

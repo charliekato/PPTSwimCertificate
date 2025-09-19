@@ -16,9 +16,6 @@ Attribute VB_Exposed = False
 
 
 
-'
-' formServerSelect
-'
 
 
 Private Sub UserForm_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
