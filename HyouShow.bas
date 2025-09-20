@@ -10,6 +10,7 @@ Option Base 0
 Const DefaultServerName = "localhost"
 Const DebugMode As Boolean = False   ' false にしておくこと!!
 
+
     Public MyCon As ADODB.Connection
     Public EventNo As Integer
 
@@ -270,6 +271,22 @@ Function ConvertTimeFormat(timeString As String)
         ConvertTimeFormat = seconds & "秒" & milliseconds
     End If
 End Function
+
+Function RelayDistance(distance As String) As String
+    If distance = " 200m" Then
+        RelayDistance = " 4×50m"
+        Exit Function
+    End If
+    If distance = " 400m" Then
+        RelayDistance = " 4×100m"
+        Exit Function
+    End If
+    If distance = " 800m" Then
+        RelayDistance = " 4×200m"
+        Exit Function
+    End If
+End Function
+
 ''eventNo, prgNo, className, genderName, distance, printenable
 Function fill_out_form_relay_with_class(prgNo As Integer, classNo As Integer, _
                 genderName As String, distance As String, styleNo As Integer, printenable As Boolean) As Boolean
@@ -327,8 +344,12 @@ Function fill_out_form_relay_with_class(prgNo As Integer, classNo As Integer, _
                      Swimmer(myRecordset!第3泳者) & "・" & Swimmer(myRecordset!第4泳者))
         
         Call fill_junni(junni)
-         Call fill_class(ClassTable(classNo))
-        Call fill_shumoku(genderName + distance + Shumoku(styleNo))
+        If formOption.cbxShumokuWithClass.Value Then
+            Call fill_shumoku(ClassTable(classNo) + genderName + RelayDistance(distance) + Shumoku(styleNo))
+        Else
+            Call fill_class(ClassTable(classNo))
+            Call fill_shumoku(genderName + RelayDistance(distance) + Shumoku(styleNo))
+        End If
         Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
             if_not_null_string(myRecordset!新記録印刷マーク))
         If printenable Then
@@ -413,14 +434,23 @@ Function fill_out_form_relay(prgNo As Integer, className As String, _
             End If
             prevTime = myRecordset!ゴール
         End If
-        Call fill_name(myRecordset!チーム名)
-
-        Call fill_shozoku(Swimmer(myRecordset!第1泳者) & "・" & Swimmer(myRecordset!第2泳者) & "・" & _
-                     Swimmer(myRecordset!第3泳者) & "・" & Swimmer(myRecordset!第4泳者))
+        If formOption.cbxKenmeiMode Then ' relayの時は氏名の場所に所属がくる
+            Call fill_name(kenmei(myRecordset!チーム名))
+        Else
+            Call fill_name(myRecordset!チーム名)
+        End If
+        
+        Call fill_shozoku(Swimmer(myRecordset!第1泳者) & "　　" & Swimmer(myRecordset!第2泳者) & vbCrLf & _
+                     Swimmer(myRecordset!第3泳者) & "　　" & Swimmer(myRecordset!第4泳者))
         
         Call fill_junni(junni)
-         Call fill_class(className)
-        Call fill_shumoku(genderName + distance + Shumoku(styleNo))
+        If formOption.cbxShumokuWithClass.Value Then
+            Call fill_shumoku(className + genderName + RelayDistance(distance) + Shumoku(styleNo))
+        Else
+
+            Call fill_class(className)
+            Call fill_shumoku(genderName + RelayDistance(distance) + Shumoku(styleNo))
+        End If
         Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
             if_not_null_string(myRecordset!新記録印刷マーク))
         If printenable Then
@@ -435,6 +465,39 @@ DOLOOPEND:
     'MyCon.Close
     Set myRecordset = Nothing
     'Set MyCon = Nothing
+End Function
+
+
+Function kenmei(shozoku As String)
+    kenmei = shozoku
+    If shozoku = "大　阪" Then
+        kenmei = kenmei + "　府"
+        Exit Function
+    End If
+    If kenmei = "東　京" Then
+        kenmei = kenmei + "　都"
+        Exit Function
+    End If
+    If kenmei = "京　都" Then
+        kenmei = kenmei + "　府"
+        Exit Function
+    End If
+    If kenmei = "北海道" Then
+        Exit Function
+    End If
+    If kenmei = "鹿児島" Then
+        kenmei = kenmei + "県"
+        Exit Function
+    End If
+    If kenmei = "神奈川" Then
+        kenmei = kenmei + "県"
+        Exit Function
+    End If
+    If kenmei = "和歌山" Then
+        kenmei = kenmei + "県"
+        Exit Function
+    End If
+    kenmei = kenmei + "　県"
 End Function
 
 Function fill_out_form_kojin_with_class(prgNo As Integer, classNo As Integer, _
@@ -499,9 +562,22 @@ Function fill_out_form_kojin_with_class(prgNo As Integer, classNo As Integer, _
             prevTime = myRecordset!ゴール
         End If
         Call fill_name(myRecordset!氏名)
-        Call fill_shozoku(myRecordset!所属名)
-        Call fill_class(ClassTable(classNo))
-        Call fill_shumoku(genderName + distance + Shumoku(styleNo))
+'-----所属
+        
+        If formOption.cbxKenmeiMode Then
+            Call fill_shozoku(kenmei(myRecordset!チーム名))
+        Else
+            Call fill_shozoku(myRecordset!チーム名)
+        End If
+        
+        
+        If formOption.cbxShumokuWithClass.Value Then
+            Call fill_shumoku(ClassTable(classNo) + genderName + distance + Shumoku(styleNo))
+        Else
+            Call fill_class(ClassTable(classNo))
+             
+            Call fill_shumoku(genderName + distance + Shumoku(styleNo))
+        End If
         Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
                  if_not_null_string(myRecordset!新記録印刷マーク))
         Call fill_junni(junni)
@@ -580,9 +656,18 @@ Function fill_out_form_kojin(prgNo As Integer, className As String, _
             prevTime = myRecordset!ゴール
         End If
         Call fill_name(myRecordset!氏名)
-        Call fill_shozoku(myRecordset!所属名)
-        Call fill_class(className)
-        Call fill_shumoku(genderName + distance + Shumoku(styleNo))
+        If formOption.cbxKenmeiMode Then
+            Call fill_shozoku(kenmei(myRecordset!所属名))
+        Else
+            Call fill_shozoku(myRecordset!所属名)
+        End If
+        If formOption.cbxShumokuWithClass.Value Then
+            Call fill_shumoku(className + genderName + distance + Shumoku(styleNo))
+        Else
+            Call fill_class(className)
+        
+            Call fill_shumoku(genderName + distance + Shumoku(styleNo))
+        End If
         Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
                  if_not_null_string(myRecordset!新記録印刷マーク))
         Call fill_junni(junni)
@@ -628,27 +713,19 @@ Sub fill_junni(junni As Integer)
         If formOption.cbxJunniShowMethod1.Value Then
             Call show("順位", "" & junni)
         ElseIf formOption.cbxJunniShowMethod2.Value Then
-            Call show("順位", "第" & junni & "位")
+            Call show("順位", "第 " & junni & " 位")
         ElseIf formOption.cbxJunniShowMethod3.Value Then
             If junni = 1 Then
                 Call show("順位", "優勝")
             Else
-                Call show("順位", "第" & junni & "位")
+                Call show("順位", "第 " & junni & " 位")
             End If
         End If
     Else
         Call show("順位", "")
     End If
 End Sub
-Sub TestDictWithReference()
-    Dim dict As Scripting.Dictionary
-    Set dict = New Scripting.Dictionary
-    
-    dict.Add "119歳以下", 1
-    dict.Add "120～159歳", 2
-    
-    MsgBox dict("120～159歳")  ' 結果: 3
-End Sub
+
 
 
 
@@ -740,16 +817,16 @@ Function fill_out_form(prgNo As Integer, printenable As Boolean) As Boolean
         Next classNo
     End If
 End Function
-
+Sub printMM()
+    Call print_it("")
+End Sub
 
 Sub print_it(dummy As String)
-    If DebugMode Then
-        Sleep 1000
-    Else
+ 
         ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
         ActivePresentation.PrintOut From:=1, To:=1, Copies:=1
         ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
-    End If
+
 End Sub
 
 

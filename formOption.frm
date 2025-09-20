@@ -70,6 +70,8 @@ Private Sub cbxBackGround_Click()
     End If
 End Sub
 
+
+
 Private Sub cmdBackGround_Click()
     Dim fd As FileDialog
     Dim selectedFile As String
