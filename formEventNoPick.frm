@@ -262,7 +262,7 @@ Private Sub btnOK_Click()
 
     myRecordset.Close
     Set myRecordset = Nothing
-    Call HyouShow.init_senshu("")
+   ' Call HyouShow.init_senshu("")
     If ClassExist Then
         Call HyouShow.init_class("")
     End If

@@ -150,28 +150,6 @@ ErrorHandler2:
 End Sub
 
 
-
-Sub init_senshu(dummy As String)
-
-    Dim myRecordset As New ADODB.Recordset
-    Dim myQuery As String
-    Dim maxSwimmerNo As Integer
-    myQuery = "SELECT MAX(選手番号) as MAX from 選手 where 大会番号 = " & EventNo
-    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
-    maxSwimmerNo = myRecordset!Max
-    
-    ReDim Swimmer(maxSwimmerNo)
-    myRecordset.Close
-    myQuery = "SELECT 氏名, 選手番号 from 選手 where 大会番号 = " & EventNo
-    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockOptimistic, adLockReadOnly
-    Do Until myRecordset.EOF
-        Swimmer(myRecordset!選手番号) = myRecordset!氏名
-        myRecordset.MoveNext
-    Loop
-    myRecordset.Close
-    Set myRecordset = Nothing
-End Sub
-
 Public Function GetPrgNofromPrintPrgNo(printPrgNo As Integer) As Integer
     Dim myRecordset As New ADODB.Recordset
     Dim myQuery As String
@@ -182,6 +160,9 @@ Public Function GetPrgNofromPrintPrgNo(printPrgNo As Integer) As Integer
     myRecordset.Close
     Set myRecordset = Nothing
 End Function
+
+
+
 Sub get_race_title(ByVal prgNo As Integer, ByRef Class As String, _
             ByRef genderStr As String, ByRef distance As String, ByRef styleNo As Integer)
     Dim myRecordset As New ADODB.Recordset
@@ -287,185 +268,9 @@ Function RelayDistance(distance As String) As String
     End If
 End Function
 
-''eventNo, prgNo, className, genderName, distance, printenable
-Function fill_out_form_relay_with_class(prgNo As Integer, classNo As Integer, _
-                genderName As String, distance As String, styleNo As Integer, printenable As Boolean) As Boolean
-                
-    Dim myQuery As String
-    Dim junni As Integer
-    Dim junnib As Integer
-    Dim prevTime As String
 
 
 
-    Dim myRecordset As New ADODB.Recordset
-    Dim winnerName As String
-    Dim myTime As String
-    If formOption.cbxRelay.Value = False Then
-        fill_out_form_relay_with_class = False
-        Exit Function
-    End If
-    fill_out_form_relay_with_class = True
-    junni = 0
-    junnib = 0
-    prevTime = ""
-    myQuery = "SELECT リレーチーム.チーム名 as チーム名, 記録.ゴール as ゴール, " & _
-            "記録.第１泳者, 記録.第２泳者, 記録.第３泳者, 記録.第４泳者, 記録.新記録印刷マーク " & _
-            "FROM 記録 " & _
-            " inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 " & _
-            " where   記録.競技番号 = " & prgNo & _
-            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
-            " and リレーチーム.大会番号 = " & EventNo & _
-            " and 記録.オープン = 0 " & _
-            " and 記録.新記録判定クラス = " & classNo & _
-            " order by ゴール asc;"
-
-    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
-    Do Until myRecordset.EOF
-        junnib = junnib + 1
-        If IsNull(myRecordset!ゴール) Or myRecordset!ゴール = "" Then
-            MsgBox ("該当データがありません。たぶんレースが終わっていないと思われます。")
-            fill_out_form_relay_with_class = False
-        Exit Do
-        End If
-        If prevTime <> myRecordset!ゴール Then
-            junni = junnib
-            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
-                Exit Do
-            End If
-            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
-                GoTo DOLOOPEND
-            End If
-            prevTime = myRecordset!ゴール
-        End If
-        Call fill_name(myRecordset!チーム名)
-
-        Call fill_shozoku(Swimmer(myRecordset!第1泳者) & "・" & Swimmer(myRecordset!第2泳者) & "・" & _
-                     Swimmer(myRecordset!第3泳者) & "・" & Swimmer(myRecordset!第4泳者))
-        
-        Call fill_junni(junni)
-        If formOption.cbxShumokuWithClass.Value Then
-            Call fill_shumoku(ClassTable(classNo) + genderName + RelayDistance(distance) + Shumoku(styleNo))
-        Else
-            Call fill_class(ClassTable(classNo))
-            Call fill_shumoku(genderName + RelayDistance(distance) + Shumoku(styleNo))
-        End If
-        Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
-            if_not_null_string(myRecordset!新記録印刷マーク))
-        If printenable Then
-            Call print_it("")
-        End If
-DOLOOPEND:
-        
-        myRecordset.MoveNext
-    Loop
-                    ' クローズと解放
-    myRecordset.Close
-    'MyCon.Close
-    Set myRecordset = Nothing
-    'Set MyCon = Nothing
-    
-End Function
-
-Function fill_out_form_relay(prgNo As Integer, className As String, _
-                genderName As String, distance As String, styleNo As Integer, printenable As Boolean) As Boolean
-    Dim myQuery As String
-    Dim junni As Integer
-    Dim junnib As Integer
-    Dim prevTime As String
-
-
-
-    Dim myRecordset As New ADODB.Recordset
-    Dim winnerName As String
-    Dim myTime As String
-    If formOption.cbxRelay.Value = False Then
-        fill_out_form_relay = False
-        Exit Function
-    End If
-    fill_out_form_relay = True
-    junni = 0
-    junnib = 0
-    prevTime = ""
-'''''''--------------------------here here here 5/20 '''''''''''''''''''''''''''''''''
-
-    If formOption.cbxUseOfficialName = True Then '''' 中体連仕様
-        myQuery = "SELECT 所属.所属名正式 as チーム名, 記録.ゴール as ゴール, " & _
-             "記録.第１泳者, 記録.第２泳者, 記録.第３泳者, 記録.第４泳者, 記録.新記録印刷マーク " & _
-             "FROM 記録 " & _
-            " inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 " & _
-            " inner join 所属 on リレーチーム.所属番号 = 所属.所属番号" & _
-            " inner join 所属 on リレーチーム.所属番号 = 所属.所属番号 " & _
-            " inner join 所属 on リレーチーム.所属番号 = 所属.所属番号 " & _
-            " where   記録.競技番号 = " & prgNo & _
-            " and 所属.大会番号 = " & EventNo & _
-            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
-            " and リレーチーム.大会番号 = " & EventNo & _
-            " and 記録.水路 < 11 " & _
-            " and 記録.オープン = 0 " & _
-            " order by ゴール asc;"
-    Else
-        myQuery = "SELECT リレーチーム.チーム名 as チーム名, 記録.ゴール as ゴール, " & _
-            "記録.第１泳者, 記録.第２泳者, 記録.第３泳者, 記録.第４泳者, 記録.新記録印刷マーク " & _
-            "FROM 記録 " & _
-            " inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 " & _
-            " where   記録.競技番号 = " & prgNo & _
-            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
-            " and リレーチーム.大会番号 = " & EventNo & _
-            " and 記録.水路 < 11 " & _
-            " and 記録.オープン = 0 " & _
-            " order by ゴール asc;"
-    End If
-    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
-    Do Until myRecordset.EOF
-        junnib = junnib + 1
-        If IsNull(myRecordset!ゴール) Or myRecordset!ゴール = "" Then
-            MsgBox ("該当データがありません。たぶんレースが終わっていないと思われます。")
-            fill_out_form_relay = False
-            Exit Do
-        End If
-        If prevTime <> myRecordset!ゴール Then
-            junni = junnib
-            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
-                Exit Do
-            End If
-            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
-                GoTo DOLOOPEND
-            End If
-            prevTime = myRecordset!ゴール
-        End If
-        If formOption.cbxKenmeiMode Then ' relayの時は氏名の場所に所属がくる
-            Call fill_name(kenmei(myRecordset!チーム名))
-        Else
-            Call fill_name(myRecordset!チーム名)
-        End If
-        
-        Call fill_shozoku(Swimmer(myRecordset!第1泳者) & "　　" & Swimmer(myRecordset!第2泳者) & vbCrLf & _
-                     Swimmer(myRecordset!第3泳者) & "　　" & Swimmer(myRecordset!第4泳者))
-        
-        Call fill_junni(junni)
-        If formOption.cbxShumokuWithClass.Value Then
-            Call fill_shumoku(className + genderName + RelayDistance(distance) + Shumoku(styleNo))
-        Else
-
-            Call fill_class(className)
-            Call fill_shumoku(genderName + RelayDistance(distance) + Shumoku(styleNo))
-        End If
-        Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
-            if_not_null_string(myRecordset!新記録印刷マーク))
-        If printenable Then
-            Call print_it("")
-        End If
-DOLOOPEND:
-        
-        myRecordset.MoveNext
-    Loop
-                    ' クローズと解放
-    myRecordset.Close
-    'MyCon.Close
-    Set myRecordset = Nothing
-    'Set MyCon = Nothing
-End Function
 
 
 Function kenmei(shozoku As String)
@@ -500,190 +305,9 @@ Function kenmei(shozoku As String)
     kenmei = kenmei + "　県"
 End Function
 
-Function fill_out_form_kojin_with_class(prgNo As Integer, classNo As Integer, _
-                    genderName As String, distance As String, styleNo As Integer, printenable As Boolean) As Boolean
-    Dim myQuery As String
-    Dim junni As Integer
-    Dim junnib As Integer
-    Dim prevTime As String
-    
-    Dim myRecordset As New ADODB.Recordset
-    Dim winnerName As String
-    Dim myTime As String
-    If formOption.cbxIndivisual.Value = False Then
-        fill_out_form_kojin_with_class = False
-        Exit Function
-    End If
-    fill_out_form_kojin_with_class = True
-    junni = 0
-    junnib = 0
-    prevTime = ""
-
-    If formOption.cbxUseOfficialName = True Then
-        myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 所属.所属名正式 sd 所属名, 記録.新記録印刷マーク " & _
-            "FROM 記録 " & _
-            " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
-            " inner join 所属 on 選手.所属番号1=所属.所属番号 " & _
-            " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
-            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
-            " and 記録.オープン = 0 " & _
-            " and 記録.新記録判定クラス = " & classNo & _
-            " and 記録.水路 < 11 " & _
-            " and 記録.選手番号>0 order by ゴール asc;"
-    Else
-        myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1 as 所属名, 記録.新記録印刷マーク" & _
-        "FROM 記録 " & _
-        " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
-        " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
-        " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
-        " and 記録.オープン = 0 " & _
-        " and 記録.新記録判定クラス = " & classNo & _
-        " and 記録.水路 < 11 " & _
-        " and 記録.選手番号>0 order by ゴール asc;"
-
-    End If
-    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
-    Do Until myRecordset.EOF
-        junnib = junnib + 1
-        If IsNull(myRecordset!ゴール) Or myRecordset!ゴール = "" Then
-            MsgBox ("該当データがありません。たぶんレースが終わっていないと思われます。")
-            fill_out_form_kojin_with_class = False
-            Exit Do
-        End If
-        If prevTime <> myRecordset!ゴール Then
-
-            junni = junnib
-            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
-                Exit Do
-            End If
-            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
-                GoTo LOOPEND2
-            End If
-            prevTime = myRecordset!ゴール
-        End If
-        Call fill_name(myRecordset!氏名)
-'-----所属
-        
-        If formOption.cbxKenmeiMode Then
-            Call fill_shozoku(kenmei(myRecordset!チーム名))
-        Else
-            Call fill_shozoku(myRecordset!チーム名)
-        End If
-        
-        
-        If formOption.cbxShumokuWithClass.Value Then
-            Call fill_shumoku(ClassTable(classNo) + genderName + distance + Shumoku(styleNo))
-        Else
-            Call fill_class(ClassTable(classNo))
-             
-            Call fill_shumoku(genderName + distance + Shumoku(styleNo))
-        End If
-        Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
-                 if_not_null_string(myRecordset!新記録印刷マーク))
-        Call fill_junni(junni)
-        If printenable Then
-            Call print_it("")
-        End If
-LOOPEND2:
-       
-        myRecordset.MoveNext
-    Loop
-            ' クローズと解放
-    myRecordset.Close
-    'MyCon.Close
-    Set myRecordset = Nothing
-    'Set MyCon = Nothing
-End Function
-
-Function fill_out_form_kojin(prgNo As Integer, className As String, _
-                    genderName As String, distance As String, styleNo As Integer, printenable As Boolean) As Boolean
-    Dim myQuery As String
-    Dim junni As Integer
-    Dim junnib As Integer
-    Dim prevTime As String
 
 
-    Dim myRecordset As New ADODB.Recordset
-    Dim winnerName As String
-    Dim myTime As String
-    If formOption.cbxIndivisual.Value = False Then
-        fill_out_form_kojin = False
-        Exit Function
-    End If
-    fill_out_form_kojin = True
-    junni = 0
-    junnib = 0
-    prevTime = ""
-        
-    If formOption.cbxUseOfficialName = True Then
-        myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 所属.所属名正式 as 所属名, 記録.新記録印刷マーク " & _
-            "FROM 記録 " & _
-            " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
-            " inner join 所属 on 所属.所属名 = 選手.所属名称1 " & _
-            " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
-            " and 所属.大会番号 = " & EventNo & _
-            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
-            " and 記録.水路<11 " & _
-            " and 記録.オープン = 0 " & _
-            " and 記録.選手番号>0 order by ゴール asc;"
-    Else
-        myQuery = "SELECT 選手.氏名 as 氏名, 記録.ゴール as ゴール, 選手.所属名称1 as 所属名, 記録.新記録印刷マーク " & _
-            "FROM 記録 " & _
-            " inner join 選手 on 選手.選手番号 = 記録.選手番号 " & _
-            " where 選手.大会番号=" & EventNo & " and 記録.競技番号 = " & prgNo & _
-            " and 記録.大会番号 = " & EventNo & " and 記録.事由入力ステータス=0 " & _
-            " and 記録.水路<11 " & _
-            " and 記録.オープン = 0 " & _
-            " and 記録.選手番号>0 order by ゴール asc;"
-    End If
-    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
-    Do Until myRecordset.EOF
-        junnib = junnib + 1
-        If IsNull(myRecordset!ゴール) Or myRecordset!ゴール = "" Then
-            MsgBox ("該当データがありません。たぶんレースが終わっていないと思われます。")
-            fill_out_form_kojin = False
-            Exit Do
-        End If
-        If prevTime <> myRecordset!ゴール Then
 
-            junni = junnib
-            If junni > CInt(formPrgNoPick.tbxJunniLast) Then
-                Exit Do
-            End If
-            If junni < CInt(formPrgNoPick.tbxJunniTop) Then
-                GoTo LOOPEND2
-            End If
-            prevTime = myRecordset!ゴール
-        End If
-        Call fill_name(myRecordset!氏名)
-        If formOption.cbxKenmeiMode Then
-            Call fill_shozoku(kenmei(myRecordset!所属名))
-        Else
-            Call fill_shozoku(myRecordset!所属名)
-        End If
-        If formOption.cbxShumokuWithClass.Value Then
-            Call fill_shumoku(className + genderName + distance + Shumoku(styleNo))
-        Else
-            Call fill_class(className)
-        
-            Call fill_shumoku(genderName + distance + Shumoku(styleNo))
-        End If
-        Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
-                 if_not_null_string(myRecordset!新記録印刷マーク))
-        Call fill_junni(junni)
-        If printenable Then
-            Call print_it("")
-        End If
-LOOPEND2:
-       
-        myRecordset.MoveNext
-    Loop
-            ' クローズと解放
-    myRecordset.Close
-    'MyCon.Close
-    Set myRecordset = Nothing
-    'Set MyCon = Nothing
-End Function
 
 Sub fill_time(myTime As String)
     If formOption.cbxTime.Value Then
@@ -739,7 +363,11 @@ End Sub
 
 Sub fill_shozoku(shozoku As String)
     If formOption.cbxBelongsTo.Value Then
-        Call show("所属", shozoku)
+        If formOption.cbxKenmeiMode Then
+            Call show("所属", kenmei(shozoku))
+        Else
+            Call show("所属", shozoku)
+        End If
     Else
         Call show("所属", "")
     End If
@@ -772,51 +400,181 @@ Sub init_class(dummy As String)
     myRecordset.Close
     Set myRecordset = Nothing
 End Sub
-Function fill_out_form(prgNo As Integer, printenable As Boolean) As Boolean
-
+Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
     Dim myQuery As String
 
+    Dim myRecordset As New ADODB.Recordset
+    Dim winnerName As String
+    Dim myTime As String
+    fill_out_form2 = True
 
-    Dim className As String
-    Dim genderName As String
-    Dim distance As String
-    Dim styleNo As Integer
-    Dim classNo As Integer
-    
-    fill_out_form = True
-    
-    Call get_race_title(prgNo, className, genderName, distance, styleNo)
+    myQuery = _
+"    IF EXISTS (select 1 from クラス where 大会番号=" & EventNo & ") " & _
+"    BEGIN" & _
+"        SELECT " & _
+"           プログラム.種目コード," & _
+"                   クラス.クラス名称,     " & _
+"           case プログラム.性別コード  when 1 then '男子'  when 2 then '女子'   when 3 then '混成'  when 4 then '混合'" & _
+"                   end as 性別, " & _
+"           距離.距離," & _
+"           種目.種目,  " & _
+"           rank() over (partition by 記録.競技番号, 記録.新記録判定クラス " & _
+"                           ORDER BY 記録.事由表示, 記録.ゴール ASC) as 順位," & _
+"           case    WHEN プログラム.種目コード < 6 THEN 選手.氏名  ELSE 選手1.氏名  END AS 氏名1, " & _
+"           case    WHEN プログラム.種目コード < 6 THEN ''         ELSE 選手2.氏名  END AS 氏名2, " & _
+"           case    WHEN プログラム.種目コード < 6 THEN ''         ELSE 選手3.氏名  END AS 氏名3, " & _
+"           case    WHEN プログラム.種目コード < 6 THEN ''         ELSE 選手4.氏名  END AS 氏名4, " & _
+"           case    WHEN プログラム.種目コード < 6 THEN "
+    myQuery = myQuery & _
+"               case 選手.主所属 when 2 then 選手.所属名称2 " & _
+"                                when 3 then 選手.所属名称3" & _
+"                                else 選手.所属名称1 end" & _
+"                   ELSE リレーチーム.チーム名     END AS 所属," & _
+"           case  WHEN プログラム.種目コード < 6 THEN " & _
+"                case 選手.主所属 when 2 then 所属2.所属名正式 " & _
+"                            when 3 then 所属3.所属名正式 " & _
+"                       else 所属1.所属名正式 end " & _
+"                 else リレー所属.所属名正式 end as 所属名正式, "
+    myQuery = myQuery & _
+"           記録.ゴール, " & _
+"           記録.新記録印刷マーク" & _
+"       from 記録 " & _
+"       LEFT JOIN 選手 ON 選手.選手番号 = 記録.選手番号  and 選手.大会番号=記録.大会番号" & _
+"       left join リレーチーム on リレーチーム.チーム番号=記録.選手番号" & _
+"             and リレーチーム.大会番号=記録.大会番号" & _
+"       LEFT JOIN 選手 as 選手1 ON 選手1.選手番号 = 記録.第１泳者 and 選手1.大会番号=記録.大会番号" & _
+"       LEFT join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者 and 選手2.大会番号=記録.大会番号" & _
+"       LEFT join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者 and 選手3.大会番号=記録.大会番号" & _
+"       LEFT join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者 and 選手4.大会番号=記録.大会番号" & _
+"       inner  join プログラム on プログラム.競技番号=記録.競技番号 " & _
+"            and プログラム.大会番号=記録.大会番号" & _
+"       inner join 距離 on 距離.距離コード=プログラム.距離コード" & _
+"       inner join 種目 on 種目.種目コード=プログラム.種目コード" & _
+"       inner join クラス on クラス.大会番号=記録.大会番号" & _
+"                        and クラス.クラス番号=記録.新記録判定クラス" & _
+"       left join 所属 as 所属1 on 所属1.所属番号=選手.所属番号1 and 所属1.大会番号=記録.大会番号 " & _
+"       left join 所属 as 所属2 on 所属2.所属番号=選手.所属番号2 and 所属2.大会番号=記録.大会番号 " & _
+"       left join 所属 as 所属3 on 所属3.所属番号=選手.所属番号3 and 所属3.大会番号=記録.大会番号 " & _
+"       left join 所属 as リレー所属 on リレー所属.所属番号=リレーチーム.所属番号 and リレー所属.大会番号=記録.大会番号 " & _
+"       WHERE  記録.大会番号= " & EventNo & _
+"       　　and 記録.選手番号>0" & _
+"           and プログラム.表示用競技番号=" & prgNo & _
+"           and 記録.事由入力ステータス=0    and 記録.水路 < 11  end"
+    myQuery = myQuery & _
+"    else begin" & _
+"        SELECT " & _
+"           プログラム.種目コード," & _
+"           '' as クラス名称 , " & _
+"           case プログラム.性別コード " & _
+"                 when 1 then '男子'" & _
+"                 when 2 then '女子'" & _
+"                 when 3 then '混成'" & _
+"                 when 4 then '混合'" & _
+"           　end as 性別, " & _
+"           距離.距離," & _
+"           種目.種目," & _
+"           rank() over (partition by 記録.競技番号 " & _
+"                    ORDER BY 記録.事由表示, 記録.ゴール ASC) as 順位," & _
+"           case    WHEN プログラム.種目コード < 6 THEN 選手.氏名  ELSE 選手1.氏名  END AS 氏名1, " & _
+"           case    WHEN プログラム.種目コード < 6 THEN ''         ELSE 選手2.氏名  END AS 氏名2, " & _
+"           case    WHEN プログラム.種目コード < 6 THEN ''         ELSE 選手3.氏名  END AS 氏名3, " & _
+"           case    WHEN プログラム.種目コード < 6 THEN ''         ELSE 選手4.氏名  END AS 氏名4, " & _
+"           case    WHEN プログラム.種目コード < 6 THEN "
+    myQuery = myQuery & _
+"           case 選手.主所属 when 2 then 選手.所属名称2 " & _
+"                            when 3 then 選手.所属名称3" & _
+"                            else 選手.所属名称1 end" & _
+"     ELSE リレーチーム.チーム名     END AS 所属," & _
+"           case  WHEN プログラム.種目コード < 6 THEN " & _
+"                case 選手.主所属 when 2 then 所属2.所属名正式 " & _
+"                            when 3 then 所属3.所属名正式 " & _
+"                       else 所属1.所属名正式 end " & _
+"                 else リレー所属.所属名正式 end as 所属名正式, " & _
+"           記録.ゴール, " & _
+"           記録.新記録印刷マーク" & _
+"       from 記録 "
+    myQuery = myQuery & _
+"       INNER JOIN 選手 ON 選手.選手番号 = 記録.選手番号 " & _
+"                and 選手.大会番号=記録.大会番号" & _
+"       LEFT JOIN リレーチーム on リレーチーム.チーム番号=記録.選手番号" & _
+"                   and リレーチーム.大会番号=記録.大会番号" & _
+"       LEFT JOIN 選手 as 選手1 ON 選手1.選手番号 = 記録.第１泳者 and 選手1.大会番号=記録.大会番号" & _
+"       LEFT join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者 and 選手2.大会番号=記録.大会番号" & _
+"       LEFT join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者 and 選手3.大会番号=記録.大会番号" & _
+"       LEFT join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者 and 選手4.大会番号=記録.大会番号" & _
+"       inner join プログラム on プログラム.競技番号=記録.競技番号 " & _
+"           and プログラム.大会番号=記録.大会番号" & _
+"       inner join 距離 on 距離.距離コード=プログラム.距離コード" & _
+"       inner join 種目 on 種目.種目コード=プログラム.種目コード" & _
+"       left join 所属 as 所属1 on 所属1.所属番号=選手.所属番号1 and 所属1.大会番号=記録.大会番号 " & _
+"       left join 所属 as 所属2 on 所属2.所属番号=選手.所属番号2 and 所属2.大会番号=記録.大会番号 " & _
+"       left join 所属 as 所属3 on 所属3.所属番号=選手.所属番号3 and 所属3.大会番号=記録.大会番号 " & _
+"       left join 所属 as リレー所属 on リレー所属.所属番号=リレーチーム.所属番号 and リレー所属.大会番号=記録.大会番号 " & _
+"     WHERE  記録.大会番号= " & EventNo & _
+"           and 記録.選手番号>0     " & _
+"           and プログラム.表示用競技番号=" & prgNo & _
+"           and 記録.事由入力ステータス=0" & _
+"           and 記録.水路 < 11" & _
+"    end;"
+    Dim junni As Integer
+    Dim relayMember As String
+    myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
+    Do Until myRecordset.EOF
 
-    If className <> "" Or formEventNoPick.class_exist("") = False Then
-    '''------ 春季室内only 県外をopenにする---
-    ' Call set_open_to_kengai
-    '------------------------------------------
-        If is_relay(styleNo) Then
-            If fill_out_form_relay(prgNo, className, genderName, distance, styleNo, printenable) = False Then
-                fill_out_form = False
+        If IsNull(myRecordset!ゴール) Or myRecordset!ゴール = "" Then
+            MsgBox ("該当データがありません。たぶんレースが終わっていないと思われます。")
+            fill_out_form2 = False
+        Exit Do
+        End If
+        junni = CInt(myRecordset!順位)
+        If junni > CInt(formPrgNoPick.tbxJunniLast) Then
+            GoTo DOLOOPEND
+        End If
+        If junni < CInt(formPrgNoPick.tbxJunniTop) Then
+            GoTo DOLOOPEND
+        End If
+        If CInt(myRecordset!種目コード) > 5 Then
+            relayMember = myRecordset!氏名1 & "    " & myRecordset!氏名2 & vbCrLf & _
+                          myRecordset!氏名3 & "    " & myRecordset!氏名4
+            Call fill_name(relayMember)
+        Else
+            Call fill_name(myRecordset!氏名1)
+        End If
+        Call fill_shozoku(myRecordset!所属)
+        
+        Call fill_junni(myRecordset!順位)
+        If formOption.cbxShumokuWithClass.Value Then
+            If CInt(myRecordset!種目コード) > 5 Then
+                Call fill_shumoku(myRecordset!クラス名称 + myRecordset!性別 + RelayDistance(myRecordset!距離) + myRecordset!種目)
+            Else
+                Call fill_shumoku(myRecordset!クラス名称 + myRecordset!性別 + myRecordset!距離 + myRecordset!種目)
             End If
         Else
-            If fill_out_form_kojin(prgNo, className, genderName, distance, styleNo, printenable) = False Then
-                fill_out_form = False
+            Call fill_class(myRecordset!クラス名称)
+            If CInt(myRecordset!種目コード) > 5 Then
+                Call fill_shumoku(myRecordset!性別 + RelayDistance(myRecordset!距離) + myRecordset!種目)
+            Else
+                Call fill_shumoku(myRecordset!性別 + myRecordset!距離 + myRecordset!種目)
             End If
         End If
-    '-------- 春季室内only
-    'Call reset_open
-    '---------------------------------------------
-    Else
-        For classNo = 1 To MaxClassNo
-            If is_relay(styleNo) Then
-                If fill_out_form_relay_with_class(prgNo, classNo, genderName, distance, styleNo, printenable) = False Then
-                    fill_out_form = False
-                End If
-            Else
-                If fill_out_form_kojin_with_class(prgNo, classNo, genderName, distance, styleNo, printenable) = False Then
-                    fill_out_form = False
-                End If
-            End If
-        Next classNo
-    End If
+        Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
+            if_not_null_string(myRecordset!新記録印刷マーク))
+        If printenable Then
+            Call print_it("")
+        End If
+DOLOOPEND:
+        
+        myRecordset.MoveNext
+    Loop
+                    ' クローズと解放
+    myRecordset.Close
+    'MyCon.Close
+    Set myRecordset = Nothing
+    'Set MyCon = Nothing
+
+    
 End Function
+
 Sub printMM()
     Call print_it("")
 End Sub

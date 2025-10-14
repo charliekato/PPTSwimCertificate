@@ -170,7 +170,7 @@ Private Sub btnPreView_Click()
 
     printPrgNo = CInt(Left(listPrg.Value, 3))
   
-    Call fill_out_form(HyouShow.GetPrgNofromPrintPrgNo(printPrgNo), False)
+    Call fill_out_form2(printPrgNo, False)
 subEnd:
 End Sub
 
@@ -208,9 +208,8 @@ End Sub
 
 
 Private Sub PrintGo(printPrgNo As Integer)
-    Dim prgNo As Integer
-    prgNo = HyouShow.GetPrgNofromPrintPrgNo(printPrgNo)
-    If fill_out_form(prgNo, True) Then
+
+    If fill_out_form2(printPrgNo, True) Then
         Call CheckPrinted(printPrgNo)
     End If
 End Sub
