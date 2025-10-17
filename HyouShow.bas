@@ -540,8 +540,11 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
         Else
             Call fill_name(myRecordset!Ž–¼1)
         End If
-        Call fill_shozoku(myRecordset!Š‘®)
-        
+        If formOption.cbxUseOfficialName.Value Then
+            Call fill_shozoku(myRecordset!Š‘®–¼³Ž®)
+        Else
+            Call fill_shozoku(myRecordset!Š‘®)
+        End If
         Call fill_junni(myRecordset!‡ˆÊ)
         If formOption.cbxShumokuWithClass.Value Then
             If CInt(myRecordset!Ží–ÚƒR[ƒh) > 5 Then
