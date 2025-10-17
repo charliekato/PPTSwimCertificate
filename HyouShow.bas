@@ -409,7 +409,7 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
     fill_out_form2 = True
 
     myQuery = _
-"    IF EXISTS (select 1 from クラス where 大会番号=" & EventNo & ") " & _
+"    IF EXISTS (select 1 from クラス where 大会番号=" & EventNo & "and クラス番号<100 ) " & _
 "    BEGIN" & _
 "        SELECT " & _
 "           プログラム.種目コード," & _
