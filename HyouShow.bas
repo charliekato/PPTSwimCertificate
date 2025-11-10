@@ -521,7 +521,7 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
     Dim junni As Integer
     Dim relayMember As String
     slideNo = 1
-    Call DeleteAllButFirstSlide
+    Call DeleteAllButFirstSlide("")
     myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     Do Until myRecordset.EOF
 
@@ -538,7 +538,7 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
             GoTo DOLOOPEND
         End If
         If slideNo > 1 Then
-            Call slideCopyAI
+            Call slideCopyAI("")
         End If
         If CInt(myRecordset!í–ÚƒR[ƒh) > 5 Then
             relayMember = myRecordset!–¼1 & "    " & myRecordset!–¼2 & vbCrLf & _
@@ -550,7 +550,7 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
             Call show(slideNo, "‹——£", myRecordset!‹——£)
         End If
         
-        Call show(slideNo, "Š‘®–¼³®", myRecordset!Š‘®–¼³®)
+        Call show(slideNo, "Š‘®–¼³®", if_not_null_string(myRecordset!Š‘®–¼³®))
         
         Call show(slideNo, "Š‘®", myRecordset!Š‘®)
         Call show(slideNo, "‡ˆÊ", myRecordset!‡ˆÊ)
@@ -582,7 +582,7 @@ DOLOOPEND:
 
     
 End Function
-Sub DeleteAllButFirstSlide()
+Sub DeleteAllButFirstSlide(dummy As String)
     Dim i As Integer
     Dim s As Slides
     Set s = ActivePresentation.Slides
@@ -596,7 +596,7 @@ Sub DeleteAllButFirstSlide()
 End Sub
 
 
-Sub slideCopyAI()
+Sub slideCopyAI(dummy As String)
     Dim srcSlide As slide
     Dim newSlideRange As SlideRange
     Dim newSlide As slide
@@ -615,17 +615,8 @@ Sub slideCopyAI()
     newSlide.Select
 End Sub
 
-Sub slideCopy(slideNo As Integer)
-    Dim srcSlide As slide
-    Dim newSlide As slide
 
-    Set srcSlide = ActivePresentation.Slides(slideNo - 1)
-    srcSlide.Copy
-    ActivePresentation.Slides.Paste (slideNo)
-End Sub
-Sub printMM()
-    Call print_it(2, 2)
-End Sub
+
 
 Sub print_it(fromNo As Integer, toNo As Integer)
     With ActivePresentation
