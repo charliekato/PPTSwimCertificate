@@ -309,11 +309,11 @@ End Function
 
 
 
-Sub fill_time(myTime As String)
+Sub fill_time(slideIndex As Integer, myTime As String)
     If formOption.cbxTime.Value Then
-        Call show("タイム", myTime)
+        Call show(slideIndex, "タイム", myTime)
     Else
-        Call show("タイム", "")
+        Call show(slideIndex, "タイム", "")
     End If
 End Sub
 
@@ -332,17 +332,17 @@ Sub fill_shumoku(Shumoku As String)
     End If
 End Sub
 
-Sub fill_junni(junni As Integer)
+Sub fill_junni(slideNo As Integer, junni As Integer)
     If formOption.cbxJunni.Value Then
         If formOption.cbxJunniShowMethod1.Value Then
-            Call show("順位", "" & junni)
+            Call show(slideNo, "順位", "" & junni)
         ElseIf formOption.cbxJunniShowMethod2.Value Then
-            Call show("順位", "第 " & junni & " 位")
+            Call show(slideNo, "順位", "第 " & junni & " 位")
         ElseIf formOption.cbxJunniShowMethod3.Value Then
             If junni = 1 Then
-                Call show("順位", "優勝")
+                Call show(slideNo, "順位", "優勝")
             Else
-                Call show("順位", "第 " & junni & " 位")
+                Call show(slideNo, "順位", "第 " & junni & " 位")
             End If
         End If
     Else
@@ -406,6 +406,7 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
     Dim myRecordset As New ADODB.Recordset
     Dim winnerName As String
     Dim myTime As String
+
     fill_out_form2 = True
 
     myQuery = _
@@ -457,7 +458,7 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
 "       left join 所属 as 所属3 on 所属3.所属番号=選手.所属番号3 and 所属3.大会番号=記録.大会番号 " & _
 "       left join 所属 as リレー所属 on リレー所属.所属番号=リレーチーム.所属番号 and リレー所属.大会番号=記録.大会番号 " & _
 "       WHERE  記録.大会番号= " & EventNo & _
-"       　　and 記録.選手番号>0" & _
+"       　　and 記録.選手番号>0 and 記録.オープン=0" & _
 "           and プログラム.表示用競技番号=" & prgNo & _
 "           and 記録.事由入力ステータス=0    and 記録.水路 < 11  end"
     myQuery = myQuery & _
@@ -511,13 +512,16 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
 "       left join 所属 as 所属3 on 所属3.所属番号=選手.所属番号3 and 所属3.大会番号=記録.大会番号 " & _
 "       left join 所属 as リレー所属 on リレー所属.所属番号=リレーチーム.所属番号 and リレー所属.大会番号=記録.大会番号 " & _
 "     WHERE  記録.大会番号= " & EventNo & _
-"           and 記録.選手番号>0     " & _
+"           and 記録.選手番号>0    and 記録.オープン=0 " & _
 "           and プログラム.表示用競技番号=" & prgNo & _
 "           and 記録.事由入力ステータス=0" & _
 "           and 記録.水路 < 11" & _
 "    end;"
+    Dim slideNo As Integer
     Dim junni As Integer
     Dim relayMember As String
+    slideNo = 1
+    Call DeleteAllButFirstSlide
     myRecordset.Open myQuery, MyCon, adOpenStatic, adLockReadOnly
     Do Until myRecordset.EOF
 
@@ -533,38 +537,39 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
         If junni < CInt(formPrgNoPick.tbxJunniTop) Then
             GoTo DOLOOPEND
         End If
+        If slideNo > 1 Then
+            Call slideCopyAI
+        End If
         If CInt(myRecordset!種目コード) > 5 Then
             relayMember = myRecordset!氏名1 & "    " & myRecordset!氏名2 & vbCrLf & _
                           myRecordset!氏名3 & "    " & myRecordset!氏名4
-            Call fill_name(relayMember)
+            Call show(slideNo, "選手名", relayMember)
+            Call show(slideNo, "距離", RelayDistance(myRecordset!距離))
         Else
-            Call fill_name(myRecordset!氏名1)
+            Call show(slideNo, "選手名", myRecordset!氏名1)
+            Call show(slideNo, "距離", myRecordset!距離)
         End If
-        If formOption.cbxUseOfficialName.Value Then
-            Call fill_shozoku(myRecordset!所属名正式)
-        Else
-            Call fill_shozoku(myRecordset!所属)
-        End If
-        Call fill_junni(myRecordset!順位)
-        If formOption.cbxShumokuWithClass.Value Then
-            If CInt(myRecordset!種目コード) > 5 Then
-                Call fill_shumoku(myRecordset!クラス名称 + myRecordset!性別 + RelayDistance(myRecordset!距離) + myRecordset!種目)
-            Else
-                Call fill_shumoku(myRecordset!クラス名称 + myRecordset!性別 + myRecordset!距離 + myRecordset!種目)
-            End If
-        Else
-            Call fill_class(myRecordset!クラス名称)
-            If CInt(myRecordset!種目コード) > 5 Then
-                Call fill_shumoku(myRecordset!性別 + RelayDistance(myRecordset!距離) + myRecordset!種目)
-            Else
-                Call fill_shumoku(myRecordset!性別 + myRecordset!距離 + myRecordset!種目)
-            End If
-        End If
-        Call fill_time(ConvertTimeFormat(myRecordset!ゴール) + " " + _
-            if_not_null_string(myRecordset!新記録印刷マーク))
+        
+        Call show(slideNo, "所属名正式", myRecordset!所属名正式)
+        
+        Call show(slideNo, "所属", myRecordset!所属)
+        Call show(slideNo, "順位", myRecordset!順位)
+        'Call fill_junni(slideNo, myRecordset!順位)
+        Call show(slideNo, "クラス", myRecordset!クラス名称)
+        Call show(slideNo, "性別", myRecordset!性別)
+    
+        Call show(slideNo, "距離", myRecordset!距離)
+        Call show(slideNo, "種目", myRecordset!種目)
+        Call show(slideNo, "タイム", ConvertTimeFormat(myRecordset!ゴール))
+        Call show(slideNo, "新記録", myRecordset!新記録印刷マーク)
+        
+
         If printenable Then
-            Call print_it("")
+            Call print_it(slideNo, slideNo)
         End If
+
+        slideNo = slideNo + 1
+        
 DOLOOPEND:
         
         myRecordset.MoveNext
@@ -577,16 +582,56 @@ DOLOOPEND:
 
     
 End Function
-
-Sub printMM()
-    Call print_it("")
+Sub DeleteAllButFirstSlide()
+    Dim i As Integer
+    Dim s As Slides
+    Set s = ActivePresentation.Slides
+    
+    ' 後ろから削除しないとインデックスがずれるので逆順でループ
+    For i = s.Count To 2 Step -1
+        s(i).Delete
+    Next i
+    
+ 
 End Sub
 
-Sub print_it(dummy As String)
- 
-        ActivePresentation.Slides(1).FollowMasterBackground = msoFalse
-        ActivePresentation.PrintOut From:=1, To:=1, Copies:=1
-        ActivePresentation.Slides(1).FollowMasterBackground = msoTrue
+
+Sub slideCopyAI()
+    Dim srcSlide As slide
+    Dim newSlideRange As SlideRange
+    Dim newSlide As slide
+
+    ' 1枚目を複製
+    Set srcSlide = ActivePresentation.Slides(1)
+    Set newSlideRange = srcSlide.Duplicate
+
+    ' SlideRange(1) で新スライドを取得
+    Set newSlide = newSlideRange(1)
+
+    ' 新しいスライドを末尾に移動
+    newSlide.MoveTo ActivePresentation.Slides.Count
+
+    ' 新しいスライドをアクティブに
+    newSlide.Select
+End Sub
+
+Sub slideCopy(slideNo As Integer)
+    Dim srcSlide As slide
+    Dim newSlide As slide
+
+    Set srcSlide = ActivePresentation.Slides(slideNo - 1)
+    srcSlide.Copy
+    ActivePresentation.Slides.Paste (slideNo)
+End Sub
+Sub printMM()
+    Call print_it(2, 2)
+End Sub
+
+Sub print_it(fromNo As Integer, toNo As Integer)
+    With ActivePresentation
+        
+        .PrintOut From:=fromNo, To:=toNo, Copies:=1
+    End With
 
 End Sub
 
@@ -598,14 +643,14 @@ Sub name_text_box(boxNo As Integer, myName As String)
     Set slide = ActivePresentation.Slides(1)
     slide.Shapes(boxNo).Name = myName
 End Sub
-Sub show(txtBoxName As String, dispText As String)
+Sub show(slideIndex As Integer, txtBoxName As String, dispText As String)
 
     ' スライドの取得
     Dim slide As slide
     Dim shp As Shape
     Dim shapeExists As Boolean
     
-    Set slide = ActivePresentation.Slides(1) ' was slideIndex
+    Set slide = ActivePresentation.Slides(slideIndex)
     On Error Resume Next
      Set shp = slide.Shapes(txtBoxName)
      shapeExists = Not shp Is Nothing
@@ -623,6 +668,10 @@ Sub InitTextBox()
     Call DisplayTextBoxName("種目")
     Call DisplayTextBoxName("順位")
     Call DisplayTextBoxName("タイム")
+    Call DisplayTextBoxName("新記録")
+    Call DisplayTextBoxName("距離")
+    Call DisplayTextBoxName("所属名正式")
+    Call DisplayTextBoxName("性別")
 End Sub
 Sub DisplayTextBoxName(txtBoxName As String)
     Dim slide As slide
