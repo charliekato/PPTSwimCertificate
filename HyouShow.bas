@@ -210,18 +210,7 @@ End Sub
 
 
 
-Function get_swimmer_by_rank(ByRef resultList As Collection, ByVal rank As Integer) As Collection
-    Dim thisResult As result
-    Dim swimmerList As Collection
-    Set swimmerList = New Collection
-    For Each thisResult In resultList
-        If thisResult.順位 = rank Then
-            swimmerList.Add thisResult
-            Exit For
-        End If
-    Next thisResult
-    Set get_swimmer_by_rank = swimmerList
-End Function
+
 Function is_relay(style As Integer) As Boolean
     is_relay = False
     If style > 5 Then is_relay = True
@@ -333,7 +322,7 @@ Sub fill_shumoku(Shumoku As String)
 End Sub
 
 Sub fill_junni(slideNo As Integer, junni As Integer)
-    If formOption.cbxJunni.Value Then
+
         If formOption.cbxJunniShowMethod1.Value Then
             Call show(slideNo, "順位", "" & junni)
         ElseIf formOption.cbxJunniShowMethod2.Value Then
@@ -341,13 +330,13 @@ Sub fill_junni(slideNo As Integer, junni As Integer)
         ElseIf formOption.cbxJunniShowMethod3.Value Then
             If junni = 1 Then
                 Call show(slideNo, "順位", "優勝")
+            ElseIf junni = 2 Then
+                Call show(slideNo, "順位", "準優勝")
             Else
                 Call show(slideNo, "順位", "第 " & junni & " 位")
             End If
         End If
-    Else
-        Call show("順位", "")
-    End If
+
 End Sub
 
 
@@ -553,8 +542,8 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
         Call show(slideNo, "所属名正式", if_not_null_string(myRecordset!所属名正式))
         
         Call show(slideNo, "所属", myRecordset!所属)
-        Call show(slideNo, "順位", myRecordset!順位)
-        'Call fill_junni(slideNo, myRecordset!順位)
+        Call fill_junni(slideNo, junni)
+
         Call show(slideNo, "クラス", myRecordset!クラス名称)
         Call show(slideNo, "性別", myRecordset!性別)
     
