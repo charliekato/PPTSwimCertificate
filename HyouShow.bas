@@ -298,29 +298,6 @@ End Function
 
 
 
-Sub fill_time(slideIndex As Integer, myTime As String)
-    If formOption.cbxTime.Value Then
-        Call show(slideIndex, "タイム", myTime)
-    Else
-        Call show(slideIndex, "タイム", "")
-    End If
-End Sub
-
-Sub fill_class(className As String)
-    If formOption.cbxClass.Value Then
-        Call show("クラス", className)
-    Else
-        Call show("クラス", "")
-    End If
-End Sub
-Sub fill_shumoku(Shumoku As String)
-    If formOption.cbxStyle.Value Then
-        Call show("種目", Shumoku)
-    Else
-        Call show("種目", "")
-    End If
-End Sub
-
 Sub fill_junni(slideNo As Integer, junni As Integer)
 
         If formOption.cbxJunniShowMethod1.Value Then
@@ -532,16 +509,25 @@ Function fill_out_form2(prgNo As Integer, printenable As Boolean) As Boolean
         If CInt(myRecordset!種目コード) > 5 Then
             relayMember = myRecordset!氏名1 & "    " & myRecordset!氏名2 & vbCrLf & _
                           myRecordset!氏名3 & "    " & myRecordset!氏名4
-            Call show(slideNo, "選手名", relayMember)
+            If formOption.cbxRelayLayout.Value = True Then
+                Call show(slideNo, "所属", relayMember)
+                Call show(slideNo, "選手名", myRecordset!所属)
+            Else
+                Call show(slideNo, "所属", myRecordset!所属)
+                Call show(slideNo, "選手名", relayMember)
+                Call show(slideNo, "所属", myRecordset!所属)
+            End If
+            
             Call show(slideNo, "距離", RelayDistance(myRecordset!距離))
         Else
             Call show(slideNo, "選手名", myRecordset!氏名1)
+            Call show(slideNo, "所属", myRecordset!所属)
             Call show(slideNo, "距離", myRecordset!距離)
         End If
         
         Call show(slideNo, "所属名正式", if_not_null_string(myRecordset!所属名正式))
         
-        Call show(slideNo, "所属", myRecordset!所属)
+       
         Call fill_junni(slideNo, junni)
 
         Call show(slideNo, "クラス", myRecordset!クラス名称)
