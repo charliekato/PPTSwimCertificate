@@ -211,11 +211,6 @@ End Sub
 
 
 
-Function is_relay(style As Integer) As Boolean
-    is_relay = False
-    If style > 5 Then is_relay = True
-    
-End Function
 
 Function ConvertTimeFormat(timeString As String)
     Dim minutes As String
